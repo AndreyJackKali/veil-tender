@@ -335,4 +335,53 @@ describe("VeilTender Midnight Compact ZK Contract", () => {
     await expect(sim.revealBid(bob)).rejects.toThrow(/Tender is not in reveal phase/);
     await expect(sim.finalizeAward(sim.issuer)).rejects.toThrow(/Tender is not in reveal phase/);
   });
+
+  it("verifies deterministic commitment separation across salts and bidder keys", () => {
+    const alicePk = pureCircuits.derive_pk(ALICE_SK);
+    const bobPk = pureCircuits.derive_pk(BOB_SK);
+    expect(alicePk).not.toEqual(bobPk);
+    const cAliceSaltA = pureCircuits.make_bid_commitment(TENDER_ID, alicePk, 72_000n, SALT_A);
+    const cAliceSaltB = pureCircuits.make_bid_commitment(TENDER_ID, alicePk, 72_000n, SALT_B);
+    const cBobSaltA = pureCircuits.make_bid_commitment(TENDER_ID, bobPk, 72_000n, SALT_A);
+    expect(cAliceSaltA).not.toEqual(cAliceSaltB);
+    expect(cAliceSaltA).not.toEqual(cBobSaltA);
+  });
+
+  it("produces distinct compliance_hash digests for distinct private auditor policy bands", async () => {
+    const sim1 = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const a1 = sim1.registerBidder("alice", ALICE_SK);
+    await sim1.submitSealedBid(a1, 70_000n, SALT_A);
+    await sim1.closeBidding(sim1.issuer);
+    await sim1.revealBid(a1);
+    await sim1.finalizeAward(sim1.issuer);
+    const l1 = await sim1.proveComplianceBand(a1, 60_000n, 80_000n);
+
+    const sim2 = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const a2 = sim2.registerBidder("alice", ALICE_SK);
+    await sim2.submitSealedBid(a2, 70_000n, SALT_A);
+    await sim2.closeBidding(sim2.issuer);
+    await sim2.revealBid(a2);
+    await sim2.finalizeAward(sim2.issuer);
+    const l2 = await sim2.proveComplianceBand(a2, 65_000n, 75_000n);
+
+    expect(l1.compliance_ok).toBe(true);
+    expect(l2.compliance_ok).toBe(true);
+    expect(l1.compliance_hash).not.toEqual(l2.compliance_hash);
+  });
+
+  it("blocks compliance attestation or cancellation once tender is settled", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    await sim.submitSealedBid(alice, 68_000n, SALT_A);
+    await sim.closeBidding(sim.issuer);
+    await sim.revealBid(alice);
+    await sim.finalizeAward(sim.issuer);
+    await sim.proveComplianceBand(alice, 60_000n, 75_000n);
+    await sim.settleTender(sim.issuer);
+
+    await expect(sim.proveComplianceBand(alice, 60_000n, 75_000n)).rejects.toThrow(
+      /Tender must be awarded/,
+    );
+    await expect(sim.cancelTender(sim.issuer)).rejects.toThrow(/Cannot cancel after award/);
+  });
 });

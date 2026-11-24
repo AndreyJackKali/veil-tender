@@ -6,7 +6,7 @@
 - **Interactive Pitch Deck:** `https://andreyjackkali.github.io/veil-tender/deck.html`
 - **Narrated Walkthrough Video:** `https://andreyjackkali.github.io/veil-tender/demo.mp4`
 - **License:** Apache License 2.0 (`LICENSE`)
-- **Compiler Verified:** Official Midnight `compact 0.36.1` (`@midnight-ntwrk/compact-runtime 0.21.0`) — **7 ZK circuits compiled cleanly** + **18/18 real Compact-runtime Vitest simulation & adversarial tests passing** + automated GitHub Actions CI.
+- **Compiler Verified:** Official Midnight `compact 0.36.1` (`@midnight-ntwrk/compact-runtime 0.21.0`) — **7 ZK circuits compiled cleanly** + **21/21 real Compact-runtime Vitest simulation & adversarial tests passing** + deterministic CLI auditor receipt generator (`pkgs/cli/audit-receipt.mjs`) + automated GitHub Actions CI.
 
 ---
 
@@ -71,12 +71,14 @@ veil-tender/
 │   │       ├── managed/veil_tender/             # Compiled Compact JS bindings + .d.ts + 7 .zkir/.bzkir circuits
 │   │       └── test/
 │   │           ├── veil-tender-simulator.ts     # Multi-party Midnight dual-ledger runtime simulator
-│   │           └── veil-tender.test.ts          # 12 comprehensive unit & security-invariant tests
+│   │           └── veil-tender.test.ts          # 21 comprehensive unit, artifact & adversarial security tests
 │   └── cli/
-│       └── demo.mjs                             # End-to-end CLI execution against compiled Compact circuits
+│       ├── demo.mjs                             # End-to-end CLI execution against compiled Compact circuits
+│       └── audit-receipt.mjs                    # Deterministic verifiable Auditor ZK Compliance Receipt CLI
 └── docs/
-    ├── index.html                               # Live Interactive Web dApp (Lace Wallet connector + Dual-Ledger Simulator)
-    └── deck.html                                # 8-Slide Interactive Pitch Deck
+    ├── index.html                               # Live Interactive Web dApp (Lace Wallet + Adversarial ZK Lab + Receipt Export)
+    ├── deck.html                                # 8-Slide Interactive Pitch Deck
+    └── demo.mp4                                 # 57s Narrated HD Walkthrough Video
 ```
 
 ---
