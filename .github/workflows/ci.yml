@@ -1,0 +1,32 @@
+name: VeilTender CI — Midnight Compact Runtime & CLI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: pkgs/contract/package-lock.json
+      - name: Install contract runtime dependencies
+        working-directory: pkgs/contract
+        run: npm ci
+      - name: TypeScript typecheck
+        working-directory: pkgs/contract
+        run: npm run typecheck
+      - name: Run Compact Runtime Vitest Suite (18 tests)
+        working-directory: pkgs/contract
+        run: npm test
+      - name: Build contract package
+        working-directory: pkgs/contract
+        run: npm run build
+      - name: Run end-to-end ZK CLI simulation
+        run: node pkgs/cli/demo.mjs

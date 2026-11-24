@@ -6,7 +6,7 @@
 - **Interactive Pitch Deck:** `https://andreyjackkali.github.io/veil-tender/deck.html`
 - **Narrated Walkthrough Video:** `https://andreyjackkali.github.io/veil-tender/demo.mp4`
 - **License:** Apache License 2.0 (`LICENSE`)
-- **Compiler Verified:** Official Midnight `compact 0.36.1` (`@midnight-ntwrk/compact-runtime 0.21.0`) — **7 ZK circuits compiled cleanly** + **12/12 real Compact-runtime Vitest simulation tests passing**.
+- **Compiler Verified:** Official Midnight `compact 0.36.1` (`@midnight-ntwrk/compact-runtime 0.21.0`) — **7 ZK circuits compiled cleanly** + **18/18 real Compact-runtime Vitest simulation & adversarial tests passing** + automated GitHub Actions CI.
 
 ---
 

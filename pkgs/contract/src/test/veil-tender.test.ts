@@ -246,4 +246,93 @@ describe("VeilTender Midnight Compact ZK Contract", () => {
     expect(state.winning_bid).toBe(RESERVE_CAP);
     expect(state.winner_pk).toEqual(pureCircuits.derive_pk(ALICE_SK));
   });
+
+  it("binds bid commitments across tender_id domain (cross-tender replay impossible)", async () => {
+    const otherTenderId = new Uint8Array(32).fill(0x99);
+    const alicePk = pureCircuits.derive_pk(ALICE_SK);
+    const c1 = pureCircuits.make_bid_commitment(TENDER_ID, alicePk, 75_000n, SALT_A);
+    const c2 = pureCircuits.make_bid_commitment(otherTenderId, alicePk, 75_000n, SALT_A);
+    expect(c1).not.toEqual(c2);
+  });
+
+  it("blocks sealed bid submission after bidding window closes or tender cancels", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    const bob = sim.registerBidder("bob", BOB_SK);
+    await sim.submitSealedBid(alice, 82_000n, SALT_A);
+    await sim.closeBidding(sim.issuer);
+
+    await expect(sim.submitSealedBid(bob, 70_000n, SALT_B)).rejects.toThrow(
+      /Tender is not accepting sealed bids/,
+    );
+
+    const sim2 = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const carol = sim2.registerBidder("carol", CAROL_SK);
+    await sim2.cancelTender(sim2.issuer);
+    await expect(sim2.submitSealedBid(carol, 50_000n, SALT_C)).rejects.toThrow(
+      /Tender is not accepting sealed bids/,
+    );
+  });
+
+  it("rejects reveal during open phase and after award finalization", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    const bob = sim.registerBidder("bob", BOB_SK);
+    await sim.submitSealedBid(alice, 71_000n, SALT_A);
+    await sim.submitSealedBid(bob, 68_000n, SALT_B);
+
+    await expect(sim.revealBid(alice)).rejects.toThrow(/Tender is not in reveal phase/);
+
+    await sim.closeBidding(sim.issuer);
+    await sim.revealBid(alice);
+    await sim.finalizeAward(sim.issuer);
+
+    await expect(sim.revealBid(bob)).rejects.toThrow(/Tender is not in reveal phase/);
+  });
+
+  it("enforces issuer-only authorization on finalize_award and settle_tender", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    await sim.submitSealedBid(alice, 65_000n, SALT_A);
+    await sim.closeBidding(sim.issuer);
+    await sim.revealBid(alice);
+
+    await expect(sim.finalizeAward(alice)).rejects.toThrow(/Only issuer can finalize award/);
+    await sim.finalizeAward(sim.issuer);
+    await sim.proveComplianceBand(alice, 60_000n, 70_000n);
+    await expect(sim.settleTender(alice)).rejects.toThrow(/Only issuer can settle tender/);
+    await sim.settleTender(sim.issuer);
+    expect(sim.getLedger().phase).toBe(TenderPhase.settled);
+  });
+
+  it("supports exact boundary compliance attestation (min_band == winning_bid == max_band) and blocks re-settlement", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    await sim.submitSealedBid(alice, 50_000n, SALT_A);
+    await sim.closeBidding(sim.issuer);
+    await sim.revealBid(alice);
+    await sim.finalizeAward(sim.issuer);
+
+    const attested = await sim.proveComplianceBand(alice, 50_000n, 50_000n);
+    expect(attested.compliance_ok).toBe(true);
+    await sim.settleTender(sim.issuer);
+    await expect(sim.settleTender(sim.issuer)).rejects.toThrow(
+      /Tender must be awarded before settlement/,
+    );
+  });
+
+  it("allows issuer cancellation during reveal phase before award and blocks subsequent reveals", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    const bob = sim.registerBidder("bob", BOB_SK);
+    await sim.submitSealedBid(alice, 80_000n, SALT_A);
+    await sim.submitSealedBid(bob, 74_000n, SALT_B);
+    await sim.closeBidding(sim.issuer);
+    await sim.revealBid(alice);
+    await sim.cancelTender(sim.issuer);
+
+    expect(sim.getLedger().phase).toBe(TenderPhase.cancelled);
+    await expect(sim.revealBid(bob)).rejects.toThrow(/Tender is not in reveal phase/);
+    await expect(sim.finalizeAward(sim.issuer)).rejects.toThrow(/Tender is not in reveal phase/);
+  });
 });
