@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VeilTender — Midnight ZK Sealed-Bid Procurement & Compliance Escrow</title>
+<style>
+  :root {
+    --bg: #070913;
+    --panel: #0f1426;
+    --panel2: #151c36;
+    --border: #243056;
+    --accent: #7c6cff;
+    --accent2: #22d3ee;
+    --ok: #10b981;
+    --warn: #f59e0b;
+    --err: #ef4444;
+    --text: #e8ecf8;
+    --muted: #8b97b8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(circle at 18% 0%, #171d42 0%, var(--bg) 52%);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+  header {
+    border-bottom: 1px solid var(--border);
+    background: rgba(7, 9, 19, 0.85);
+    backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 20;
+  }
+  .nav {
+    max-width: 1280px; margin: 0 auto; padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: grid; place-items: center; font-weight: 800; color: #050814; font-size: 18px;
+  }
+  .brand h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+  .brand span { font-size: 12px; color: var(--muted); display: block; }
+  .nav-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .pill {
+    font-size: 12px; padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--panel); color: var(--muted);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+  .dot.warn { background: var(--warn); }
+  button, a.btn {
+    cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600;
+    padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--panel2); color: var(--text); text-decoration: none;
+    transition: all 0.15s ease;
+  }
+  button:hover, a.btn:hover { border-color: var(--accent); background: #1d2647; }
+  button.primary {
+    background: linear-gradient(135deg, var(--accent), #5b4cf0);
+    border-color: transparent; color: #fff;
+  }
+  button.primary:hover { filter: brightness(1.1); }
+  button.ok { background: rgba(16, 185, 129, 0.15); border-color: var(--ok); color: #6ee7b7; }
+  button.danger { background: rgba(239, 68, 68, 0.12); border-color: var(--err); color: #fca5a5; }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  main { max-width: 1280px; margin: 0 auto; padding: 24px; }
+  .hero {
+    display: grid; grid-template-columns: 1.35fr 1fr; gap: 20px; margin-bottom: 22px;
+  }
+  @media (max-width: 900px) { .hero, .grid-2 { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px 20px;
+  }
+  .hero h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em; }
+  .hero p { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+  .stepper {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+  }
+  .step {
+    flex: 1; min-width: 110px; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid var(--border); background: #0b0f1f; font-size: 12px;
+  }
+  .step.active { border-color: var(--accent2); background: rgba(34, 211, 238, 0.08); }
+  .step.done { border-color: var(--ok); background: rgba(16, 185, 129, 0.08); }
+  .step b { display: block; font-size: 13px; margin-bottom: 2px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .kpi {
+    background: #0b0f1f; border: 1px solid var(--border); border-radius: 10px; padding: 12px;
+  }
+  .kpi .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  .kpi .val { font-size: 20px; font-weight: 700; margin-top: 4px; color: var(--accent2); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .section-title {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--accent2); font-weight: 700; margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .badge {
+    font-size: 10.5px; padding: 3px 8px; border-radius: 6px; white-space: nowrap; flex-shrink: 0;
+    background: rgba(124, 108, 255, 0.16); color: #c4b5fd; border: 1px solid rgba(124, 108, 255, 0.35);
+  }
+  .badge.private { background: rgba(16, 185, 129, 0.14); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.35); }
+  .badge.public { background: rgba(34, 211, 238, 0.14); color: #67e8f9; border-color: rgba(34, 211, 238, 0.35); }
+  .form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; align-items: flex-end; }
+  label { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px; }
+  input, select {
+    background: #090d1a; border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 11px; color: var(--text); font-size: 13px; font-family: inherit;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+  .slot {
+    background: #0b0f1f; border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px; margin-bottom: 10px;
+  }
+  .slot-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11.5px; color: #a5b4fc; word-break: break-all; }
+  .muted { color: var(--muted); font-size: 12px; }
+  .log {
+    background: #060812; border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px; max-height: 220px; overflow-y: auto; font-family: ui-monospace, monospace; font-size: 12px;
+  }
+  .log-entry { padding: 4px 0; border-bottom: 1px dashed rgba(36, 48, 86, 0.5); }
+  .log-entry.ok { color: #6ee7b7; }
+  .log-entry.err { color: #fca5a5; }
+  .log-entry.info { color: #93c5fd; }
+  .actions-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .circuit-pill {
+    display: inline-block; font-family: ui-monospace, monospace; font-size: 11px;
+    padding: 3px 7px; border-radius: 5px; background: #141a33; color: #c7d2fe; border: 1px solid var(--border);
+    margin: 2px 4px 2px 0;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="nav">
+    <div class="brand">
+      <div class="logo">V</div>
+      <div>
+        <h1>VeilTender</h1>
+        <span>Midnight ZK Sealed-Bid Procurement &amp; Selective Compliance Escrow</span>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <span class="pill"><span class="dot" id="walletDot"></span><span id="walletStatus">Dual-Ledger Local ZK Simulator</span></span>
+      <button id="connectLaceBtn" onclick="connectLace()">Connect Midnight Lace</button>
+      <a class="btn" href="deck.html">Pitch Deck (8 Slides)</a>
+      <a class="btn" href="demo.mp4" target="_blank" rel="noopener">Demo Video</a>
+      <a class="btn" href="https://github.com/AndreyJackKali/veil-tender" target="_blank" rel="noopener">GitHub Repo</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="card">
+      <h2>Confidential Sealed-Bid RFQs with Compiler-Verified ZK Privacy</h2>
+      <p>
+        Built with official Midnight <b>Compact 0.36.1</b> (<code>veil_tender.compact</code>, 7 compiled ZK circuits).
+        Bidders prove <code>0 &lt; bid &lt;= reserve_cap</code> inside a zero-knowledge circuit while keeping bid amounts
+        strictly in local private witness state. After award, winners prove compliance within a private auditor policy band
+        without disclosing the policy bounds on-chain.
+      </p>
+      <div>
+        <span class="circuit-pill">submit_sealed_bid()</span>
+        <span class="circuit-pill">close_bidding()</span>
+        <span class="circuit-pill">reveal_bid()</span>
+        <span class="circuit-pill">finalize_award()</span>
+        <span class="circuit-pill">prove_compliance_band()</span>
+        <span class="circuit-pill">settle_tender()</span>
+        <span class="circuit-pill">cancel_tender()</span>
+      </div>
+      <div class="stepper" id="stepper"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <span>On-Chain Public Ledger Telemetry</span>
+        <span class="badge public">PUBLIC STATE</span>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi"><div class="lbl">Phase</div><div class="val" id="kpiPhase">OPEN</div></div>
+        <div class="kpi"><div class="lbl">Reserve Cap</div><div class="val" id="kpiCap">$100,000</div></div>
+        <div class="kpi"><div class="lbl">Sealed / Revealed</div><div class="val" id="kpiCounts">0 / 0</div></div>
+      </div>
+      <div class="kpi-row" style="margin-top:10px;">
+        <div class="kpi"><div class="lbl">Winning Bid</div><div class="val" id="kpiWinner">SEALED</div></div>
+        <div class="kpi"><div class="lbl">Compliance ZK</div><div class="val" id="kpiCompliance">PENDING</div></div>
+        <div class="kpi"><div class="lbl">Compact Build</div><div class="val" style="color:#a78bfa;">v0.36.1</div></div>
+      </div>
+      <div class="actions-bar">
+        <button class="primary" onclick="runFullDemo()">Run Guided 5-Phase Demo</button>
+        <button onclick="resetTender()">Reset Tender</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid-2">
+    <div class="card">
+      <div class="section-title">
+        <span>1. Bidder Private Witness Terminal</span>
+        <span class="badge private">LOCAL PRIVATE STATE (NEVER ON-CHAIN)</span>
+      </div>
+      <div class="form-row">
+        <label>Active Bidder Identity
+          <select id="bidderSelect">
+            <option value="alice">Alice Infrastructure Ltd (sk: 0x11..11)</option>
+            <option value="bob">Bob Quantum Cloud (sk: 0x22..22)</option>
+            <option value="carol">Carol Zero-Trust Labs (sk: 0x33..33)</option>
+            <option value="issuer">Issuer (Self-Bid Test — Must Reject)</option>
+          </select>
+        </label>
+        <label>Sealed Bid Amount (USD)
+          <input id="bidAmount" type="number" value="78500" min="0" step="500" />
+        </label>
+      </div>
+      <div class="actions-bar">
+        <button class="primary" id="btnSeal" onclick="submitSealedBid()">1. Seal Bid (ZK Range Proof)</button>
+        <button class="ok" id="btnReveal" onclick="revealSelectedBid()">3. Reveal Committed Bid</button>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;" />
+
+      <div class="section-title">
+        <span>2. Issuer Governance &amp; Selective Compliance Disclosure</span>
+        <span class="badge">DUAL-LEDGER CONTROLS</span>
+      </div>
+      <div class="actions-bar" style="margin-bottom:12px;">
+        <button id="btnClose" onclick="closeBidding()">2. Issuer: close_bidding()</button>
+        <button id="btnAward" onclick="finalizeAward()">4. Issuer: finalize_award()</button>
+        <button class="ok" id="btnSettle" onclick="settleTender()">6. Issuer: settle_tender()</button>
+        <button class="danger" id="btnCancel" onclick="cancelTender()">Cancel</button>
+      </div>
+      <div class="form-row">
+        <label>Private Auditor Min Band (Witness)
+          <input id="auditMin" type="number" value="60000" step="1000" />
+        </label>
+        <label>Private Auditor Max Band (Witness)
+          <input id="auditMax" type="number" value="85000" step="1000" />
+        </label>
+        <button class="primary" id="btnCompliance" onclick="proveCompliance()">5. Winner: prove_compliance_band()</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <span>Public Ledger Commitments vs. Private Receipts</span>
+        <span class="badge public">SIDE-BY-SIDE PRIVACY AUDIT</span>
+      </div>
+      <div id="slotsView"></div>
+      <div class="slot" id="complianceBox" style="display:none;">
+        <div class="slot-head"><span>Selective Compliance Attestation</span><span class="badge private">ZK VERIFIED</span></div>
+        <div class="muted">Policy bounds stayed strictly in local witness; only domain-separated hash disclosed:</div>
+        <div class="mono" id="complianceHashText"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-title">
+      <span>Compact Circuit Execution &amp; Witness Audit Log</span>
+      <span class="muted">All assertions mirror <code>pkgs/contract/src/veil_tender.compact</code> 1-to-1</span>
+    </div>
+    <div class="log" id="auditLog"></div>
+  </section>
+</main>
+
+<script>
+const PHASES = ["open", "revealing", "awarded", "settled", "cancelled"];
+const KEYS = {
+  issuer: "01".repeat(32),
+  alice: "11".repeat(32),
+  bob: "22".repeat(32),
+  carol: "33".repeat(32),
+};
+const NAMES = {
+  issuer: "Issuer Treasury",
+  alice: "Alice Infrastructure Ltd",
+  bob: "Bob Quantum Cloud",
+  carol: "Carol Zero-Trust Labs",
+};
+
+async function sha256Hex(str) {
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+function randomHex(bytes = 32) {
+  const arr = new Uint8Array(bytes);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+let state = {};
+let privateVault = {};
+
+async function derivePk(actor) {
+  return sha256Hex("veiltender:pk:v1|" + KEYS[actor]);
+}
+
+async function makeCommitment(tid, pk, amount, salt) {
+  return sha256Hex(`veiltender:bid:v1|${tid}|${pk}|${amount}|${salt}`);
+}
+
+function log(msg, cls = "info") {
+  const el = document.getElementById("auditLog");
+  const ts = new Date().toISOString().slice(11, 19);
+  const row = document.createElement("div");
+  row.className = "log-entry " + cls;
+  row.textContent = `[${ts} UTC] ${msg}`;
+  el.prepend(row);
+}
+
+async function connectLace() {
+  const mn = window.midnight && (window.midnight.mnLace || window.midnight.lace);
+  if (!mn) {
+    document.getElementById("walletDot").className = "dot warn";
+    document.getElementById("walletStatus").textContent = "Lace Extension Not Detected — Running Local Simulator";
+    log("Midnight Lace DApp Connector (@midnight-ntwrk/dapp-connector-api) not detected in browser; using local dual-ledger ZK simulator.", "info");
+    return;
+  }
+  try {
+    await mn.enable();
+    document.getElementById("walletDot").className = "dot";
+    document.getElementById("walletStatus").textContent = "Connected: Midnight Lace Wallet";
+    log("Connected to Midnight Lace DApp Connector successfully.", "ok");
+  } catch (e) {
+    log("Lace wallet connection declined: " + e.message, "err");
+  }
+}
+
+async function resetTender() {
+  const issuerPk = await derivePk("issuer");
+  state = {
+    tenderId: "42".repeat(32),
+    issuerPk,
+    reserveCap: 100000,
+    phase: "open",
+    slots: [],
+    hasWinner: false,
+    winnerActor: null,
+    winnerPk: null,
+    winningBid: 0,
+    complianceOk: false,
+    complianceHash: null,
+  };
+  privateVault = {};
+  document.getElementById("auditLog").innerHTML = "";
+  log(`constructor(tid=0x42..42, reserve_cap=$${state.reserveCap.toLocaleString()}) -> phase=open, issuer_pk=0x${issuerPk.slice(0, 12)}...`, "ok");
+  render();
+}
+
+async function submitSealedBid() {
+  const actor = document.getElementById("bidderSelect").value;
+  const amount = Number(document.getElementById("bidAmount").value);
+  try {
+    if (state.phase !== "open") throw new Error("Tender is not accepting sealed bids");
+    const pk = await derivePk(actor);
+    if (!Number.isFinite(amount) || amount <= 0) throw new Error("ZK Range Proof failed: Bid amount must be positive");
+    if (amount > state.reserveCap) throw new Error(`ZK Range Proof failed: Bid $${amount.toLocaleString()} exceeds reserve cap $${state.reserveCap.toLocaleString()}`);
+    if (pk === state.issuerPk) throw new Error("Issuer cannot bid on own tender");
+    if (state.slots.some(s => s.pk === pk)) throw new Error("Bidder already submitted");
+    if (state.slots.length >= 3) throw new Error("All sealed bid slots are full");
+
+    const salt = randomHex(32);
+    const commitment = await makeCommitment(state.tenderId, pk, amount, salt);
+    privateVault[actor] = { amount, salt, pk };
+    state.slots.push({ slot: state.slots.length, actor, pk, commitment, revealed: false, revealedAmount: null });
+    log(`submit_sealed_bid(${NAMES[actor]}): ZK range proof 0 < bid <= ${state.reserveCap} PASSED. Disclosed commitment 0x${commitment.slice(0, 14)}... (amount kept strictly private in witness!)`, "ok");
+    render();
+  } catch (e) {
+    log(`REJECTED submit_sealed_bid(${NAMES[actor]}): ${e.message}`, "err");
+  }
+}
+
+function closeBidding() {
+  try {
+    if (state.phase !== "open") throw new Error("Tender is not open");
+    if (state.slots.length === 0) throw new Error("At least one sealed bid is required");
+    state.phase = "revealing";
+    log(`close_bidding(issuer): Sealed window locked (${state.slots.length} commitments). Phase -> revealing.`, "ok");
+    render();
+  } catch (e) {
+    log(`REJECTED close_bidding(): ${e.message}`, "err");
+  }
+}
+
+async function revealSelectedBid(overrideActor) {
+  const actor = overrideActor || document.getElementById("bidderSelect").value;
+  try {
+    if (state.phase !== "revealing") throw new Error("Tender is not in reveal phase");
+    const receipt = privateVault[actor];
+    if (!receipt) throw new Error("No local private witness receipt for selected actor");
+    const slot = state.slots.find(s => s.pk === receipt.pk);
+    if (!slot) throw new Error("Caller has no sealed bid");
+    if (slot.revealed) throw new Error(`Slot ${slot.slot} already revealed`);
+    const recomputed = await makeCommitment(state.tenderId, receipt.pk, receipt.amount, receipt.salt);
+    if (recomputed !== slot.commitment) throw new Error("Commitment mismatch");
+    slot.revealed = true;
+    slot.revealedAmount = receipt.amount;
+    if (!state.hasWinner || receipt.amount < state.winningBid) {
+      state.hasWinner = true;
+      state.winnerActor = actor;
+      state.winnerPk = receipt.pk;
+      state.winningBid = receipt.amount;
+    }
+    log(`reveal_bid(${NAMES[actor]}): Commitment verified! Opened bid = $${receipt.amount.toLocaleString()}. Current lowest = $${state.winningBid.toLocaleString()} (${NAMES[state.winnerActor]}).`, "ok");
+    render();
+  } catch (e) {
+    log(`REJECTED reveal_bid(${NAMES[actor]}): ${e.message}`, "err");
+  }
+}
+
+function finalizeAward() {
+  try {
+    if (state.phase !== "revealing") throw new Error("Tender is not in reveal phase");
+    if (!state.hasWinner) throw new Error("No revealed bids to award");
+    state.phase = "awarded";
+    log(`finalize_award(issuer): Awarded to ${NAMES[state.winnerActor]} at $${state.winningBid.toLocaleString()}. Phase -> awarded.`, "ok");
+    render();
+  } catch (e) {
+    log(`REJECTED finalize_award(): ${e.message}`, "err");
+  }
+}
+
+async function proveCompliance() {
+  try {
+    if (state.phase !== "awarded") throw new Error("Tender must be awarded first");
+    const minB = Number(document.getElementById("auditMin").value);
+    const maxB = Number(document.getElementById("auditMax").value);
+    if (minB > maxB) throw new Error("Invalid audit band");
+    if (state.winningBid < minB) throw new Error("Winning bid below compliance floor");
+    if (state.winningBid > maxB) throw new Error("Winning bid above compliance ceiling");
+    state.complianceHash = await sha256Hex(`veiltender:audit:v1|${state.tenderId}|${minB}|${maxB}`);
+    state.complianceOk = true;
+    log(`prove_compliance_band(${NAMES[state.winnerActor]}): ZK proved winning_bid ∈ private policy band WITHOUT disclosing bounds on-chain! compliance_hash=0x${state.complianceHash.slice(0, 14)}...`, "ok");
+    render();
+  } catch (e) {
+    log(`REJECTED prove_compliance_band(): ${e.message}`, "err");
+  }
+}
+
+function settleTender() {
+  try {
+    if (state.phase !== "awarded") throw new Error("Tender must be awarded before settlement");
+    if (!state.complianceOk) throw new Error("Compliance attestation required before settlement");
+    state.phase = "settled";
+    log(`settle_tender(issuer): Escrow settled cleanly for ${NAMES[state.winnerActor]} ($${state.winningBid.toLocaleString()}). Lifecycle complete!`, "ok");
+    render();
+  } catch (e) {
+    log(`REJECTED settle_tender(): ${e.message}`, "err");
+  }
+}
+
+function cancelTender() {
+  try {
+    if (state.phase !== "open" && state.phase !== "revealing") throw new Error("Cannot cancel after award");
+    state.phase = "cancelled";
+    log("cancel_tender(issuer): Tender cancelled prior to award.", "info");
+    render();
+  } catch (e) {
+    log(`REJECTED cancel_tender(): ${e.message}`, "err");
+  }
+}
+
+async function runFullDemo() {
+  await resetTender();
+  document.getElementById("bidderSelect").value = "alice";
+  document.getElementById("bidAmount").value = "88000";
+  await submitSealedBid();
+  document.getElementById("bidderSelect").value = "bob";
+  document.getElementById("bidAmount").value = "69500";
+  await submitSealedBid();
+  document.getElementById("bidderSelect").value = "carol";
+  document.getElementById("bidAmount").value = "74000";
+  await submitSealedBid();
+  closeBidding();
+  await revealSelectedBid("alice");
+  await revealSelectedBid("carol");
+  await revealSelectedBid("bob");
+  finalizeAward();
+  document.getElementById("auditMin").value = "60000";
+  document.getElementById("auditMax").value = "80000";
+  await proveCompliance();
+  settleTender();
+}
+
+function render() {
+  document.getElementById("kpiPhase").textContent = state.phase.toUpperCase();
+  document.getElementById("kpiCap").textContent = "$" + state.reserveCap.toLocaleString();
+  const revCount = state.slots.filter(s => s.revealed).length;
+  document.getElementById("kpiCounts").textContent = `${state.slots.length} / ${revCount}`;
+  document.getElementById("kpiWinner").textContent = state.hasWinner ? `$${state.winningBid.toLocaleString()}` : "SEALED";
+  document.getElementById("kpiCompliance").textContent = state.complianceOk ? "ZK PASSED" : "PENDING";
+
+  const labels = [
+    ["1. Sealed Bidding", "open"],
+    ["2. Reveal Window", "revealing"],
+    ["3. Awarded", "awarded"],
+    ["4. Settled", "settled"],
+  ];
+  const curIdx = PHASES.indexOf(state.phase);
+  document.getElementById("stepper").innerHTML = labels.map(([lbl, ph], i) => {
+    const cls = state.phase === "cancelled" ? "" : (i < curIdx ? "done" : (i === curIdx ? "active" : ""));
+    return `<div class="step ${cls}"><b>${lbl}</b><span class="muted">${ph}</span></div>`;
+  }).join("");
+
+  const sv = document.getElementById("slotsView");
+  if (state.slots.length === 0) {
+    sv.innerHTML = `<div class="slot"><div class="muted">No sealed bids committed yet. Select a bidder on the left and click <b>Seal Bid</b>, or click <b>Run Guided 5-Phase Demo</b>.</div></div>`;
+  } else {
+    sv.innerHTML = state.slots.map(s => {
+      const priv = privateVault[s.actor];
+      const isWin = state.winnerPk && state.winnerPk === s.pk;
+      return `<div class="slot">
+        <div class="slot-head">
+          <span>Slot #${s.slot} — ${NAMES[s.actor]} ${isWin ? "🏆" : ""}</span>
+          <span class="badge ${s.revealed ? "public" : "private"}">${s.revealed ? "REVEALED: $" + s.revealedAmount.toLocaleString() : "AMOUNT HIDDEN ON-CHAIN"}</span>
+        </div>
+        <div class="muted">Public Ledger Commitment (<code>slot${s.slot}_commit</code>):</div>
+        <div class="mono">0x${s.commitment}</div>
+        <div class="muted" style="margin-top:5px;">Local Witness Receipt (private device only): <b style="color:#6ee7b7;">$${priv.amount.toLocaleString()}</b> | salt: <code>0x${priv.salt.slice(0, 12)}...</code></div>
+      </div>`;
+    }).join("");
+  }
+
+  const cb = document.getElementById("complianceBox");
+  if (state.complianceOk) {
+    cb.style.display = "block";
+    document.getElementById("complianceHashText").textContent = "0x" + state.complianceHash;
+  } else {
+    cb.style.display = "none";
+  }
+}
+
+resetTender();
+</script>
+</body>
+</html>

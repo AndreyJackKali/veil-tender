@@ -1,0 +1,179 @@
+{
+  "manifest-version": "1",
+  "compiler-version": "0.36.1",
+  "compiler-commit": "7fa3a117c5e7efe9d2c51da04263e5f0b3509144",
+  "language-version": "0.28.0",
+  "runtime-version": "0.21.0",
+  "compiler": {
+    "type": "directory",
+    "contract-info.json": {
+      "type": "file",
+      "size": 8790,
+      "hash": "aa92de31dfb772fb86490f29b1dc9e00d2b176abce0ae69fa78e62291afd01f2"
+    }
+  },
+  "contract": {
+    "type": "directory",
+    "index.d.ts": {
+      "type": "file",
+      "size": 5626,
+      "hash": "f208646121d8d57062b12dec87d503ad78b781832654e64aa724b4e953ef1123"
+    },
+    "index.js": {
+      "type": "file",
+      "size": 257347,
+      "hash": "a7eb76230b2a0eb4a2a8b577cc775a9c93af6e93694896287517af590bf8aa65"
+    },
+    "index.js.map": {
+      "type": "file",
+      "size": 6563,
+      "hash": "f1b525f176bcf3fcd2657a5ecb6e7cf5cc1e474881760d2fa2b9c4dee1bd3181"
+    }
+  },
+  "zkir": {
+    "type": "directory",
+    "cancel_tender.bzkir": {
+      "type": "file",
+      "size": 807,
+      "hash": "7d3d0fa9ac76d4c1fa3683f4481927d5a07038ada6578c05ec9705a3ba4b3ebb"
+    },
+    "cancel_tender.zkir": {
+      "type": "file",
+      "size": 2981,
+      "hash": "5626a1b3a826fe641987a83aee0f96d585faa3383c453eaa552dd70c3931a104"
+    },
+    "close_bidding.bzkir": {
+      "type": "file",
+      "size": 735,
+      "hash": "fb390728489bc641213e7d0f581007c1479696be2073cfbb67fedc611e09f23c"
+    },
+    "close_bidding.zkir": {
+      "type": "file",
+      "size": 2767,
+      "hash": "8bd0024d94fd6a1e042d0608db0fe0fd1faa7218a7c8126ee101952c09f7451d"
+    },
+    "finalize_award.bzkir": {
+      "type": "file",
+      "size": 735,
+      "hash": "60ea18052b24be5109ec95ad3e50734783ac2a75feff97f465ce5fb8d1084e4d"
+    },
+    "finalize_award.zkir": {
+      "type": "file",
+      "size": 2767,
+      "hash": "1001ce34e541cdc8446211de8c81b0b9b284990709d8f7f80e95724e1d6667ea"
+    },
+    "prove_compliance_band.bzkir": {
+      "type": "file",
+      "size": 1552,
+      "hash": "ca4ac60ec3618547ad6ecbc177d6cf0a7772454675b5cd21d2d7d5d15c1f2d56"
+    },
+    "prove_compliance_band.zkir": {
+      "type": "file",
+      "size": 5672,
+      "hash": "158727f336ab7f3a8b6fefd18f6fe0ab04eb3a43664e3d9a4a66baed4bd406aa"
+    },
+    "reveal_bid.bzkir": {
+      "type": "file",
+      "size": 4691,
+      "hash": "6f3ab18b51cf37c121de76a33b9cc72a22a17242caf94bbe058f8696bc74cb92"
+    },
+    "reveal_bid.zkir": {
+      "type": "file",
+      "size": 15539,
+      "hash": "ec11609162a764af396ff6f09bd32ebaca00dd50556f662cb772cd72b0153044"
+    },
+    "settle_tender.bzkir": {
+      "type": "file",
+      "size": 735,
+      "hash": "9a2ee94dcf382a3338419ba75404ec0ea903293c114308c6a609cc2217021bad"
+    },
+    "settle_tender.zkir": {
+      "type": "file",
+      "size": 2767,
+      "hash": "29584c5210b4371f7143651376c4e0e55eab220ee56b9b123cd89abfaec60a07"
+    },
+    "submit_sealed_bid.bzkir": {
+      "type": "file",
+      "size": 4396,
+      "hash": "b9c61ef0392e00e0f7cd5a9734401f28b4479cb32f5310cd0039022785c7c668"
+    },
+    "submit_sealed_bid.zkir": {
+      "type": "file",
+      "size": 14258,
+      "hash": "4874bcfa94775f561f435f49850b97405c184028544d4a5c78aed0a7cf61d353"
+    }
+  },
+  "keys": {
+    "type": "directory",
+    "cancel_tender.prover": {
+      "type": "file",
+      "size": 11277367,
+      "hash": "d2257ad641459dc37f1ad048e07451644ebc17e1ff3e8622625c7cd24671392d"
+    },
+    "cancel_tender.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "8edf28122cdf92bea746fc90c4fcba7e0921140d234d3b63b5a9dacfa6083119"
+    },
+    "close_bidding.prover": {
+      "type": "file",
+      "size": 11277295,
+      "hash": "c7b8dddc6548c7fe79a61ae5a2274ca09808561f90f38dd8598b63a15a30b184"
+    },
+    "close_bidding.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "1ef509da6b31dc2c7f7634be638fce77e5d9960acdc8c7005af3e416b09016c9"
+    },
+    "finalize_award.prover": {
+      "type": "file",
+      "size": 11277295,
+      "hash": "276e5b4cbe4cca8febf4d1a52519d0210caba85c39a2c2da09ea3aaec71ee8e9"
+    },
+    "finalize_award.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "a400556f264773bb183c3b5e7c625bf33f787872fae470edd00297c63005e622"
+    },
+    "prove_compliance_band.prover": {
+      "type": "file",
+      "size": 22550304,
+      "hash": "804c702b40ac57dca1d6c7c1775b41f8652179638568e0c7f50b64aa50d19405"
+    },
+    "prove_compliance_band.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "68a46f64bca32fe150c0e3f924d3f9f894dddd1f9b9f00eeed5acd72bd9b223d"
+    },
+    "reveal_bid.prover": {
+      "type": "file",
+      "size": 22553443,
+      "hash": "068cabee6d4f6022afa5e6302907ca51077dce22c403cf51bf841072585fdc61"
+    },
+    "reveal_bid.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "685955e8c5e916f37807364818aa1be3176b96e0ef2ad6a038579920daa7186e"
+    },
+    "settle_tender.prover": {
+      "type": "file",
+      "size": 11277295,
+      "hash": "4f8d314a90d6dba01558045dcb7037eccfffbb75334bfe8d79e8b53aa919a512"
+    },
+    "settle_tender.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "a48c830e9b60483111d8c173f65dff0d216e1aa72031081b45892513d9f1bcf8"
+    },
+    "submit_sealed_bid.prover": {
+      "type": "file",
+      "size": 22553148,
+      "hash": "56eec0179d6001adba625439d4517fc326eb388ac797791141d8cf7925255496"
+    },
+    "submit_sealed_bid.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "badf03f27ac74f211d92cbf3fd84054d756987d3a893f8e2a5d4ab221e999671"
+    }
+  }
+}

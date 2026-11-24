@@ -1,0 +1,224 @@
+pragma language_version >= 0.16;
+
+import CompactStandardLibrary;
+
+export enum TenderPhase {
+  open,
+  revealing,
+  awarded,
+  settled,
+  cancelled
+}
+
+// Public dual-ledger state (zero bid amounts revealed during sealed phase)
+export ledger phase:            TenderPhase;
+export ledger tender_id:        Bytes<32>;
+export ledger issuer_pk:        Bytes<32>;
+export ledger reserve_cap:      Uint<64>;
+export ledger bid_count:        Counter;
+export ledger reveal_count:     Counter;
+
+// Up to 3 sealed bidder slots on-chain (commitments only; amounts stay private in witness)
+export ledger slot0_used:       Boolean;
+export ledger slot1_used:       Boolean;
+export ledger slot2_used:       Boolean;
+export ledger slot0_bidder:     Bytes<32>;
+export ledger slot1_bidder:     Bytes<32>;
+export ledger slot2_bidder:     Bytes<32>;
+export ledger slot0_commit:     Bytes<32>;
+export ledger slot1_commit:     Bytes<32>;
+export ledger slot2_commit:     Bytes<32>;
+export ledger slot0_revealed:   Boolean;
+export ledger slot1_revealed:   Boolean;
+export ledger slot2_revealed:   Boolean;
+
+// Award & settlement state (populated strictly during reveal / award / settle)
+export ledger has_winner:       Boolean;
+export ledger winner_pk:        Bytes<32>;
+export ledger winning_bid:      Uint<64>;
+export ledger compliance_hash:  Bytes<32>;
+export ledger compliance_ok:    Boolean;
+
+// Private local-state witnesses (never exposed on-chain unless explicitly disclosed)
+witness local_secret_key():                         Bytes<32>;
+witness get_bid_amount():                           Uint<64>;
+witness get_bid_salt():                             Bytes<32>;
+witness get_audit_band():                           Vector<2, Uint<64>>;
+witness store_bid_receipt(amt: Uint<64>, salt: Bytes<32>): [];
+
+constructor(tid: Bytes<32>, cap: Uint<64>) {
+  assert(cap > 0, "Reserve cap must be positive");
+  const sk = local_secret_key();
+  tender_id = disclose(tid);
+  issuer_pk = disclose(derive_pk(sk));
+  reserve_cap = disclose(cap);
+  phase = TenderPhase.open;
+  slot0_used = false;
+  slot1_used = false;
+  slot2_used = false;
+  slot0_revealed = false;
+  slot1_revealed = false;
+  slot2_revealed = false;
+  has_winner = false;
+  winning_bid = 0;
+  compliance_ok = false;
+}
+
+export pure circuit derive_pk(sk: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([pad(32, "veiltender:pk:v1"), sk]);
+}
+
+export pure circuit make_bid_commitment(
+  tid: Bytes<32>,
+  bidder_pk: Bytes<32>,
+  amount: Uint<64>,
+  salt: Bytes<32>
+): Bytes<32> {
+  const amt_bytes = (amount as Field) as Bytes<32>;
+  return persistentHash<Vector<5, Bytes<32>>>([
+    pad(32, "veiltender:bid:v1"),
+    tid,
+    bidder_pk,
+    amt_bytes,
+    salt
+  ]);
+}
+
+// Phase 1: Sealed-bid commit with ZERO-KNOWLEDGE range proof (0 < bid <= reserve_cap)
+// The bid amount NEVER leaves private state; only the hash commitment is disclosed.
+export circuit submit_sealed_bid(): [] {
+  assert(phase == TenderPhase.open, "Tender is not accepting sealed bids");
+
+  const sk = local_secret_key();
+  const pk = derive_pk(sk);
+  const amount = get_bid_amount();
+  const salt = get_bid_salt();
+
+  // Zero-knowledge range proof: proves bid is strictly positive and within public reserve cap
+  // without disclosing `amount` to the ledger or competing bidders!
+  assert(amount > 0, "Bid amount must be positive");
+  assert(amount <= reserve_cap, "Bid exceeds tender reserve cap");
+
+  // Prevent issuer self-bidding and duplicate bids from the same identity
+  assert(pk != issuer_pk, "Issuer cannot bid on own tender");
+  assert(!slot0_used || pk != slot0_bidder, "Bidder already submitted");
+  assert(!slot1_used || pk != slot1_bidder, "Bidder already submitted");
+  assert(!slot2_used || pk != slot2_bidder, "Bidder already submitted");
+
+  const commitment = make_bid_commitment(tender_id, pk, amount, salt);
+  store_bid_receipt(amount, salt);
+
+  if (!slot0_used) {
+    slot0_bidder = disclose(pk);
+    slot0_commit = disclose(commitment);
+    slot0_used = true;
+    bid_count.increment(1);
+  } else if (!slot1_used) {
+    slot1_bidder = disclose(pk);
+    slot1_commit = disclose(commitment);
+    slot1_used = true;
+    bid_count.increment(1);
+  } else {
+    assert(!slot2_used, "All sealed bid slots are full");
+    slot2_bidder = disclose(pk);
+    slot2_commit = disclose(commitment);
+    slot2_used = true;
+    bid_count.increment(1);
+  }
+}
+
+// Issuer closes sealed submission window and opens reveal window
+export circuit close_bidding(): [] {
+  assert(phase == TenderPhase.open, "Tender is not open");
+  const sk = local_secret_key();
+  assert(derive_pk(sk) == issuer_pk, "Only issuer can close bidding");
+  assert(slot0_used, "At least one sealed bid is required");
+  phase = TenderPhase.revealing;
+}
+
+// Phase 2: Bidder proves opening of commitment; lowest valid bid wins deterministically
+export circuit reveal_bid(): [] {
+  assert(phase == TenderPhase.revealing, "Tender is not in reveal phase");
+
+  const sk = local_secret_key();
+  const pk = disclose(derive_pk(sk));
+  const amount = disclose(get_bid_amount());
+  const salt = get_bid_salt();
+  const expected = make_bid_commitment(tender_id, pk, amount, salt);
+
+  assert(amount > 0, "Revealed bid must be positive");
+  assert(amount <= reserve_cap, "Revealed bid exceeds reserve cap");
+
+  if (slot0_used && pk == slot0_bidder) {
+    assert(!slot0_revealed, "Slot 0 already revealed");
+    assert(expected == slot0_commit, "Commitment mismatch for slot 0");
+    slot0_revealed = true;
+  } else if (slot1_used && pk == slot1_bidder) {
+    assert(!slot1_revealed, "Slot 1 already revealed");
+    assert(expected == slot1_commit, "Commitment mismatch for slot 1");
+    slot1_revealed = true;
+  } else {
+    assert(slot2_used && pk == slot2_bidder, "Caller has no sealed bid");
+    assert(!slot2_revealed, "Slot 2 already revealed");
+    assert(expected == slot2_commit, "Commitment mismatch for slot 2");
+    slot2_revealed = true;
+  }
+
+  reveal_count.increment(1);
+
+  if (!has_winner || amount < winning_bid) {
+    has_winner = true;
+    winner_pk = pk;
+    winning_bid = amount;
+  }
+}
+
+// Phase 3: Issuer finalizes award after at least one valid reveal
+export circuit finalize_award(): [] {
+  assert(phase == TenderPhase.revealing, "Tender is not in reveal phase");
+  const sk = local_secret_key();
+  assert(derive_pk(sk) == issuer_pk, "Only issuer can finalize award");
+  assert(has_winner, "No revealed bids to award");
+  phase = TenderPhase.awarded;
+}
+
+// Phase 4: Selective Compliance Disclosure — winner proves winning bid falls within a private
+// auditor/procurement policy band [min_band, max_band] without exposing the policy bounds on-chain!
+export circuit prove_compliance_band(): [] {
+  assert(phase == TenderPhase.awarded, "Tender must be awarded first");
+  const sk = local_secret_key();
+  assert(derive_pk(sk) == winner_pk, "Only awarded winner can attest compliance");
+
+  const band = get_audit_band();
+  const min_band = band[0];
+  const max_band = band[1];
+  assert(min_band <= max_band, "Invalid audit band");
+  assert(winning_bid >= min_band, "Winning bid below compliance floor");
+  assert(winning_bid <= max_band, "Winning bid above compliance ceiling");
+
+  const band_hash = persistentHash<Vector<4, Bytes<32>>>([
+    pad(32, "veiltender:audit:v1"),
+    tender_id,
+    (min_band as Field) as Bytes<32>,
+    (max_band as Field) as Bytes<32>
+  ]);
+  compliance_hash = disclose(band_hash);
+  compliance_ok = true;
+}
+
+// Phase 5: Issuer marks escrow settled after compliance attestation
+export circuit settle_tender(): [] {
+  assert(phase == TenderPhase.awarded, "Tender must be awarded before settlement");
+  const sk = local_secret_key();
+  assert(derive_pk(sk) == issuer_pk, "Only issuer can settle tender");
+  assert(compliance_ok, "Compliance attestation required before settlement");
+  phase = TenderPhase.settled;
+}
+
+// Emergency cancellation by issuer prior to award
+export circuit cancel_tender(): [] {
+  assert(phase == TenderPhase.open || phase == TenderPhase.revealing, "Cannot cancel after award");
+  const sk = local_secret_key();
+  assert(derive_pk(sk) == issuer_pk, "Only issuer can cancel tender");
+  phase = TenderPhase.cancelled;
+}
