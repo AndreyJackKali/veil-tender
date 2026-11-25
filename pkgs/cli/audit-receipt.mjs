@@ -18,6 +18,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const MANAGED_DIR = path.resolve(__dirname, "../contract/src/managed/veil_tender");
 
 const CIRCUITS = [
+  "lock_compliance_policy",
   "submit_sealed_bid",
   "close_bidding",
   "reveal_bid",
@@ -49,6 +50,7 @@ const witnesses = {
   get_bid_amount: (ctx) => [ctx.privateState, ctx.privateState.bidAmount],
   get_bid_salt: (ctx) => [ctx.privateState, ctx.privateState.bidSalt],
   get_audit_band: (ctx) => [ctx.privateState, [ctx.privateState.auditMin, ctx.privateState.auditMax]],
+  get_policy_salt: (ctx) => [ctx.privateState, ctx.privateState.policySalt],
   store_bid_receipt: (ctx, amt, salt) => [
     { ...ctx.privateState, bidAmount: amt, bidSalt: new Uint8Array(salt) },
     [],
@@ -60,9 +62,17 @@ async function main() {
   const addr = sampleContractAddress();
   const tenderId = new Uint8Array(32).fill(0x42);
   const reserveCap = 100_000n;
+  const policySalt = new Uint8Array(32).fill(0xd4);
 
   const issuer = { sk: new Uint8Array(32).fill(0x01), pkHex: "0".repeat(64) };
-  let issuerPS = { secretKey: issuer.sk, bidAmount: null, bidSalt: null, auditMin: null, auditMax: null };
+  let issuerPS = {
+    secretKey: issuer.sk,
+    bidAmount: null,
+    bidSalt: null,
+    auditMin: 60_000n,
+    auditMax: 80_000n,
+    policySalt,
+  };
 
   const init = await contract.initialState(
     createConstructorContext(issuerPS, issuer.pkHex),
@@ -85,9 +95,12 @@ async function main() {
     return res.context.callContext.currentPrivateState ?? ps;
   };
 
-  let alicePS = { secretKey: new Uint8Array(32).fill(0x11), bidAmount: 88_000n, bidSalt: new Uint8Array(32).fill(0xa1), auditMin: null, auditMax: null };
-  let bobPS   = { secretKey: new Uint8Array(32).fill(0x22), bidAmount: 69_500n, bidSalt: new Uint8Array(32).fill(0xb2), auditMin: 60_000n, auditMax: 80_000n };
-  let carolPS = { secretKey: new Uint8Array(32).fill(0x33), bidAmount: 74_000n, bidSalt: new Uint8Array(32).fill(0xc3), auditMin: null, auditMax: null };
+  // Phase 0: Issuer cryptographically commits to private policy band [60k, 80k] without disclosing bounds
+  issuerPS = await call("lock_compliance_policy", issuerPS, issuer.pkHex);
+
+  let alicePS = { secretKey: new Uint8Array(32).fill(0x11), bidAmount: 88_000n, bidSalt: new Uint8Array(32).fill(0xa1), auditMin: null, auditMax: null, policySalt: null };
+  let bobPS   = { secretKey: new Uint8Array(32).fill(0x22), bidAmount: 69_500n, bidSalt: new Uint8Array(32).fill(0xb2), auditMin: 60_000n, auditMax: 80_000n, policySalt };
+  let carolPS = { secretKey: new Uint8Array(32).fill(0x33), bidAmount: 74_000n, bidSalt: new Uint8Array(32).fill(0xc3), auditMin: null, auditMax: null, policySalt: null };
 
   alicePS = await call("submit_sealed_bid", alicePS, "1".padStart(64, "0"));
   bobPS   = await call("submit_sealed_bid", bobPS,   "2".padStart(64, "0"));
@@ -97,7 +110,8 @@ async function main() {
   const zeroLeakageDuringSealed =
     sealedLedger.winning_bid === 0n &&
     sealedLedger.has_winner === false &&
-    sealedLedger.bid_count === 3n;
+    sealedLedger.bid_count === 3n &&
+    sealedLedger.policy_locked === true;
 
   issuerPS = await call("close_bidding", issuerPS, issuer.pkHex);
   alicePS  = await call("reveal_bid", alicePS, "1".padStart(64, "0"));
@@ -111,7 +125,7 @@ async function main() {
   const circuits = collectCircuitFingerprints();
 
   const receiptBody = {
-    schema: "veiltender.auditor_receipt.v1",
+    schema: "veiltender.auditor_receipt.v2",
     compactCompiler: "0.36.1",
     compactRuntime: "0.21.0",
     tenderId: toHex(tenderId),
@@ -124,12 +138,15 @@ async function main() {
       Buffer.from(pureCircuits.derive_pk(bobPS.secretKey)),
     ),
     winningBid: finalLedger.winning_bid.toString(),
+    policyLocked: finalLedger.policy_locked,
+    policyCommitment: toHex(finalLedger.policy_commitment),
     complianceOk: finalLedger.compliance_ok,
     complianceHash: toHex(finalLedger.compliance_hash),
     privacyInvariants: {
       zeroLeakageDuringSealedPhase: zeroLeakageDuringSealed,
       privatePolicyBoundsDisclosedOnChain: false,
       bidderSaltsDisclosedOnChain: false,
+      policySaltDisclosedOnChain: false,
     },
     commitments: [
       toHex(finalLedger.slot0_commit),

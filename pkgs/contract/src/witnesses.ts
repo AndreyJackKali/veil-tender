@@ -6,6 +6,7 @@ export interface VeilTenderPrivateState {
   readonly bidSalt: Uint8Array | null;
   readonly auditMinBand: bigint | null;
   readonly auditMaxBand: bigint | null;
+  readonly policySalt: Uint8Array | null;
   readonly storedReceipt: {
     readonly amount: bigint;
     readonly salt: Uint8Array;
@@ -24,6 +25,7 @@ export function createInitialPrivateState(
     bidSalt: null,
     auditMinBand: null,
     auditMaxBand: null,
+    policySalt: null,
     storedReceipt: null,
   };
 }
@@ -58,6 +60,13 @@ export const veilTenderWitnesses = {
       throw new Error("Compliance audit band is not set in private state");
     }
     return [ctx.privateState, [auditMinBand, auditMaxBand]];
+  },
+
+  get_policy_salt: (ctx: WitnessCtx): [VeilTenderPrivateState, Uint8Array] => {
+    if (ctx.privateState.policySalt === null) {
+      throw new Error("Compliance policy salt is not set in private state");
+    }
+    return [ctx.privateState, ctx.privateState.policySalt];
   },
 
   store_bid_receipt: (

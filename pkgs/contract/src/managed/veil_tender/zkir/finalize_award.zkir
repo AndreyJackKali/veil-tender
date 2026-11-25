@@ -29,7 +29,7 @@
     { "op": "assert", "cond": "%t.11" },
     { "op": "public_input", "type": "Scalar<BLS12-381>", "output": "%t.12", "guard": null },
     { "op": "impact", "guard": "0x01", "inputs": ["0x30"] },
-    { "op": "impact", "guard": "0x01", "inputs": ["0x51", "0x01", "0x01", "0x01", "0x01", "0x01", "0x0a"] },
+    { "op": "impact", "guard": "0x01", "inputs": ["0x51", "0x01", "0x01", "0x01", "0x01", "0x01", "0x08"] },
     { "op": "impact", "guard": "0x01", "inputs": ["0x0c", "0x01", "0x01", "%t.12"] },
     { "op": "assert", "cond": "%t.12" },
     { "op": "impact", "guard": "0x01", "inputs": ["0x70", "0x01", "0x01", "0x00"] },

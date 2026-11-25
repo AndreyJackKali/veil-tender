@@ -158,15 +158,35 @@ export class VeilTenderSimulator {
     return this.applyResult(actor, res);
   }
 
-  async proveComplianceBand(
-    actor: ActorSession,
+  async lockCompliancePolicy(
     minBand: bigint,
     maxBand: bigint,
+    policySalt: Uint8Array,
+    actor: ActorSession = this.issuer,
   ): Promise<Ledger> {
     actor.privateState = {
       ...actor.privateState,
       auditMinBand: minBand,
       auditMaxBand: maxBand,
+      policySalt: new Uint8Array(policySalt),
+    };
+    const res = await this.contract.impureCircuits.lock_compliance_policy(
+      this.ctxFor("lock_compliance_policy", actor),
+    );
+    return this.applyResult(actor, res);
+  }
+
+  async proveComplianceBand(
+    actor: ActorSession,
+    minBand: bigint,
+    maxBand: bigint,
+    policySalt?: Uint8Array,
+  ): Promise<Ledger> {
+    actor.privateState = {
+      ...actor.privateState,
+      auditMinBand: minBand,
+      auditMaxBand: maxBand,
+      policySalt: policySalt ? new Uint8Array(policySalt) : actor.privateState.policySalt,
     };
     const res = await this.contract.impureCircuits.prove_compliance_band(
       this.ctxFor("prove_compliance_band", actor),

@@ -8,26 +8,26 @@
     "type": "directory",
     "contract-info.json": {
       "type": "file",
-      "size": 8790,
-      "hash": "aa92de31dfb772fb86490f29b1dc9e00d2b176abce0ae69fa78e62291afd01f2"
+      "size": 10383,
+      "hash": "d2af374c84f56f4c0a3b23abbde8c26402d63e1062ddf3ba83b3c9395427cbf8"
     }
   },
   "contract": {
     "type": "directory",
     "index.d.ts": {
       "type": "file",
-      "size": 5626,
-      "hash": "f208646121d8d57062b12dec87d503ad78b781832654e64aa724b4e953ef1123"
+      "size": 6675,
+      "hash": "b74cb242a386c521181d2d816e2333b3e883eaae520ebb481407d4549bb0bcf6"
     },
     "index.js": {
       "type": "file",
-      "size": 257347,
-      "hash": "a7eb76230b2a0eb4a2a8b577cc775a9c93af6e93694896287517af590bf8aa65"
+      "size": 294068,
+      "hash": "08c53648a62da9c7afeb095ebc1cfdef30da6476ad9203904f1f21b281eba20a"
     },
     "index.js.map": {
       "type": "file",
-      "size": 6563,
-      "hash": "f1b525f176bcf3fcd2657a5ecb6e7cf5cc1e474881760d2fa2b9c4dee1bd3181"
+      "size": 7709,
+      "hash": "eecaf4b1e67a0d4636e813b0a57b1811fa5b5a54694d7bf257cc8e2a701c0f18"
     }
   },
   "zkir": {
@@ -55,32 +55,42 @@
     "finalize_award.bzkir": {
       "type": "file",
       "size": 735,
-      "hash": "60ea18052b24be5109ec95ad3e50734783ac2a75feff97f465ce5fb8d1084e4d"
+      "hash": "c3345cfaf5b1701da2667482f55e488d3525a741b501012f491b91339e5fa903"
     },
     "finalize_award.zkir": {
       "type": "file",
       "size": 2767,
-      "hash": "1001ce34e541cdc8446211de8c81b0b9b284990709d8f7f80e95724e1d6667ea"
+      "hash": "ef7a879f9396f77604355886e016cd40714592b2041053c95f2b48153335022a"
+    },
+    "lock_compliance_policy.bzkir": {
+      "type": "file",
+      "size": 1860,
+      "hash": "6039a5c1a011daea4b820dedff53b7466e3eb04d068bbb341dbd9031f4e6f505"
+    },
+    "lock_compliance_policy.zkir": {
+      "type": "file",
+      "size": 6765,
+      "hash": "a83edcd20e58c1264a10ea1077cbb756ece1a5b6f1c85081835bcb10d9e30cb7"
     },
     "prove_compliance_band.bzkir": {
       "type": "file",
-      "size": 1552,
-      "hash": "ca4ac60ec3618547ad6ecbc177d6cf0a7772454675b5cd21d2d7d5d15c1f2d56"
+      "size": 2426,
+      "hash": "bf311a9999501e1592d845631483eb77c3c2fa0c494fab66426cf767a4896837"
     },
     "prove_compliance_band.zkir": {
       "type": "file",
-      "size": 5672,
-      "hash": "158727f336ab7f3a8b6fefd18f6fe0ab04eb3a43664e3d9a4a66baed4bd406aa"
+      "size": 8560,
+      "hash": "4456063a4bbf969c5a67b689b5ca6ff595da1ce8f20ea904449d620bba176b79"
     },
     "reveal_bid.bzkir": {
       "type": "file",
       "size": 4691,
-      "hash": "6f3ab18b51cf37c121de76a33b9cc72a22a17242caf94bbe058f8696bc74cb92"
+      "hash": "fc6792ab4f02bdeed716dadd2ca41379331b63f7e249445759de847c5a4c725c"
     },
     "reveal_bid.zkir": {
       "type": "file",
       "size": 15539,
-      "hash": "ec11609162a764af396ff6f09bd32ebaca00dd50556f662cb772cd72b0153044"
+      "hash": "82d67819943f0a4fb36a9c1e8873972623c14f8abd40d7b53cc1faa0036e894a"
     },
     "settle_tender.bzkir": {
       "type": "file",
@@ -95,12 +105,12 @@
     "submit_sealed_bid.bzkir": {
       "type": "file",
       "size": 4396,
-      "hash": "b9c61ef0392e00e0f7cd5a9734401f28b4479cb32f5310cd0039022785c7c668"
+      "hash": "0f8e023d5518b801f3fb34ffd73a7a52bce90daba13a55ac54e66cedb1ca3954"
     },
     "submit_sealed_bid.zkir": {
       "type": "file",
       "size": 14258,
-      "hash": "4874bcfa94775f561f435f49850b97405c184028544d4a5c78aed0a7cf61d353"
+      "hash": "483f9f37dbf0b97b5e917d8fe479a0d53440243f2228d7f5244fc84d98a8f098"
     }
   },
   "keys": {
@@ -128,32 +138,42 @@
     "finalize_award.prover": {
       "type": "file",
       "size": 11277295,
-      "hash": "276e5b4cbe4cca8febf4d1a52519d0210caba85c39a2c2da09ea3aaec71ee8e9"
+      "hash": "7f528784759460d671945a06b4eadc884dcb34fec4e44b3a10b493090cd00ca6"
     },
     "finalize_award.verifier": {
       "type": "file",
       "size": 2121,
-      "hash": "a400556f264773bb183c3b5e7c625bf33f787872fae470edd00297c63005e622"
+      "hash": "356359fec3c790fd54958d1084bde6210ce4b4a7b6f11d3616b91666eda9a133"
+    },
+    "lock_compliance_policy.prover": {
+      "type": "file",
+      "size": 22550612,
+      "hash": "9ec4fa7e346d176ed8b81cca6c46729f5e38b31de03898712e0fadcae1db7d04"
+    },
+    "lock_compliance_policy.verifier": {
+      "type": "file",
+      "size": 2121,
+      "hash": "993a846cd86bc60b58d903e9f23ed2a438e26586201fc56f577fee48c1a4a616"
     },
     "prove_compliance_band.prover": {
       "type": "file",
-      "size": 22550304,
-      "hash": "804c702b40ac57dca1d6c7c1775b41f8652179638568e0c7f50b64aa50d19405"
+      "size": 22551178,
+      "hash": "750058543a6b234ef2ec58987c3fe7e37e811402dc8cf71d971b5111a1d1fc5c"
     },
     "prove_compliance_band.verifier": {
       "type": "file",
       "size": 2121,
-      "hash": "68a46f64bca32fe150c0e3f924d3f9f894dddd1f9b9f00eeed5acd72bd9b223d"
+      "hash": "96174988c20b096a3d380c9825b480fd647203d72bf7d26f6532e20a49c9d136"
     },
     "reveal_bid.prover": {
       "type": "file",
       "size": 22553443,
-      "hash": "068cabee6d4f6022afa5e6302907ca51077dce22c403cf51bf841072585fdc61"
+      "hash": "5da9f1ecc1a27e9cf697925d7bd595b28bd4ba6573839054f8d9256bb649ef63"
     },
     "reveal_bid.verifier": {
       "type": "file",
       "size": 2121,
-      "hash": "685955e8c5e916f37807364818aa1be3176b96e0ef2ad6a038579920daa7186e"
+      "hash": "9ee5ff7d8f415b2a3457afe37dac066def6a1407f387b6071b906b1734fc73d1"
     },
     "settle_tender.prover": {
       "type": "file",
@@ -168,12 +188,12 @@
     "submit_sealed_bid.prover": {
       "type": "file",
       "size": 22553148,
-      "hash": "56eec0179d6001adba625439d4517fc326eb388ac797791141d8cf7925255496"
+      "hash": "07ee06bd29909d50b8a06498d455d678c799a4bbdfd8b9648a591ba0d3b7ae76"
     },
     "submit_sealed_bid.verifier": {
       "type": "file",
       "size": 2121,
-      "hash": "badf03f27ac74f211d92cbf3fd84054d756987d3a893f8e2a5d4ab221e999671"
+      "hash": "c9e57aa4cb086af36196e7238e35ab7ff17287c997e11288722182e03000820d"
     }
   }
 }

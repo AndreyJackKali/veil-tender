@@ -17,6 +17,7 @@ const witnesses = {
   get_bid_amount: (ctx) => [ctx.privateState, ctx.privateState.bidAmount],
   get_bid_salt: (ctx) => [ctx.privateState, ctx.privateState.bidSalt],
   get_audit_band: (ctx) => [ctx.privateState, [ctx.privateState.auditMin, ctx.privateState.auditMax]],
+  get_policy_salt: (ctx) => [ctx.privateState, ctx.privateState.policySalt],
   store_bid_receipt: (ctx, amt, salt) => [
     { ...ctx.privateState, bidAmount: amt, bidSalt: new Uint8Array(salt) },
     [],
@@ -28,9 +29,17 @@ async function main() {
   const addr = sampleContractAddress();
   const tenderId = new Uint8Array(32).fill(0x42);
   const reserveCap = 100_000n;
+  const policySalt = new Uint8Array(32).fill(0xd4);
 
   const issuer = { sk: new Uint8Array(32).fill(0x01), pkHex: "0".repeat(64) };
-  let issuerPS = { secretKey: issuer.sk, bidAmount: null, bidSalt: null, auditMin: null, auditMax: null };
+  let issuerPS = {
+    secretKey: issuer.sk,
+    bidAmount: null,
+    bidSalt: null,
+    auditMin: 60_000n,
+    auditMax: 80_000n,
+    policySalt,
+  };
 
   const init = await contract.initialState(
     createConstructorContext(issuerPS, issuer.pkHex),
@@ -53,12 +62,18 @@ async function main() {
     return res.context.callContext.currentPrivateState ?? ps;
   };
 
-  console.log("=== VeilTender Midnight Compact 0.36.1 End-to-End Proof Walkthrough ===");
+  console.log("=== VeilTender v1.3.0 Midnight Compact 0.36.1 End-to-End Policy-Locked Proof Walkthrough ===");
   console.log("Initial ledger:", { phase: TenderPhase[ledger(shared).phase], reserveCap: ledger(shared).reserve_cap.toString(), issuerPk: hex(ledger(shared).issuer_pk) });
 
-  let alicePS = { secretKey: new Uint8Array(32).fill(0x11), bidAmount: 88_000n, bidSalt: new Uint8Array(32).fill(0xa1), auditMin: null, auditMax: null };
-  let bobPS   = { secretKey: new Uint8Array(32).fill(0x22), bidAmount: 69_500n, bidSalt: new Uint8Array(32).fill(0xb2), auditMin: 60_000n, auditMax: 80_000n };
-  let carolPS = { secretKey: new Uint8Array(32).fill(0x33), bidAmount: 74_000n, bidSalt: new Uint8Array(32).fill(0xc3), auditMin: null, auditMax: null };
+  issuerPS = await call("lock_compliance_policy", issuerPS, issuer.pkHex);
+  console.log("After lock_compliance_policy():", {
+    policyLocked: ledger(shared).policy_locked,
+    policyCommitment: hex(ledger(shared).policy_commitment),
+  });
+
+  let alicePS = { secretKey: new Uint8Array(32).fill(0x11), bidAmount: 88_000n, bidSalt: new Uint8Array(32).fill(0xa1), auditMin: null, auditMax: null, policySalt: null };
+  let bobPS   = { secretKey: new Uint8Array(32).fill(0x22), bidAmount: 69_500n, bidSalt: new Uint8Array(32).fill(0xb2), auditMin: 60_000n, auditMax: 80_000n, policySalt };
+  let carolPS = { secretKey: new Uint8Array(32).fill(0x33), bidAmount: 74_000n, bidSalt: new Uint8Array(32).fill(0xc3), auditMin: null, auditMax: null, policySalt: null };
 
   alicePS = await call("submit_sealed_bid", alicePS, "1".padStart(64, "0"));
   bobPS   = await call("submit_sealed_bid", bobPS,   "2".padStart(64, "0"));
@@ -79,6 +94,8 @@ async function main() {
     phase: TenderPhase[L.phase],
     winningBid: L.winning_bid.toString(),
     winnerMatchesBob: Buffer.from(L.winner_pk).equals(Buffer.from(pureCircuits.derive_pk(bobPS.secretKey))),
+    policyLocked: L.policy_locked,
+    policyCommitment: hex(L.policy_commitment),
     complianceOk: L.compliance_ok,
     complianceHash: hex(L.compliance_hash),
   });

@@ -22,11 +22,13 @@ jobs:
       - name: TypeScript typecheck
         working-directory: pkgs/contract
         run: npm run typecheck
-      - name: Run Compact Runtime Vitest Suite (18 tests)
+      - name: Run Compact Runtime Vitest Suite (31 tests across 8 ZK circuits)
         working-directory: pkgs/contract
         run: npm test
       - name: Build contract package
         working-directory: pkgs/contract
         run: npm run build
-      - name: Run end-to-end ZK CLI simulation
+      - name: Run end-to-end Policy-Locked ZK CLI simulation
         run: node pkgs/cli/demo.mjs
+      - name: Generate and independently verify Auditor ZK Compliance Receipt
+        run: node pkgs/cli/audit-receipt.mjs > /tmp/veiltender-receipt.json && node pkgs/cli/verify-receipt.mjs /tmp/veiltender-receipt.json

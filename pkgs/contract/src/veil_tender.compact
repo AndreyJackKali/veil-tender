@@ -32,18 +32,21 @@ export ledger slot0_revealed:   Boolean;
 export ledger slot1_revealed:   Boolean;
 export ledger slot2_revealed:   Boolean;
 
-// Award & settlement state (populated strictly during reveal / award / settle)
-export ledger has_winner:       Boolean;
-export ledger winner_pk:        Bytes<32>;
-export ledger winning_bid:      Uint<64>;
-export ledger compliance_hash:  Bytes<32>;
-export ledger compliance_ok:    Boolean;
+// Award, policy-lock & settlement state (populated strictly during policy lock / reveal / award / settle)
+export ledger has_winner:        Boolean;
+export ledger winner_pk:         Bytes<32>;
+export ledger winning_bid:       Uint<64>;
+export ledger policy_locked:     Boolean;
+export ledger policy_commitment: Bytes<32>;
+export ledger compliance_hash:   Bytes<32>;
+export ledger compliance_ok:     Boolean;
 
 // Private local-state witnesses (never exposed on-chain unless explicitly disclosed)
 witness local_secret_key():                         Bytes<32>;
 witness get_bid_amount():                           Uint<64>;
 witness get_bid_salt():                             Bytes<32>;
 witness get_audit_band():                           Vector<2, Uint<64>>;
+witness get_policy_salt():                          Bytes<32>;
 witness store_bid_receipt(amt: Uint<64>, salt: Bytes<32>): [];
 
 constructor(tid: Bytes<32>, cap: Uint<64>) {
@@ -61,6 +64,7 @@ constructor(tid: Bytes<32>, cap: Uint<64>) {
   slot2_revealed = false;
   has_winner = false;
   winning_bid = 0;
+  policy_locked = false;
   compliance_ok = false;
 }
 
@@ -82,6 +86,45 @@ export pure circuit make_bid_commitment(
     amt_bytes,
     salt
   ]);
+}
+
+export pure circuit make_policy_commitment(
+  tid: Bytes<32>,
+  min_band: Uint<64>,
+  max_band: Uint<64>,
+  policy_salt: Bytes<32>
+): Bytes<32> {
+  return persistentHash<Vector<5, Bytes<32>>>([
+    pad(32, "veiltender:policy:v1"),
+    tid,
+    (min_band as Field) as Bytes<32>,
+    (max_band as Field) as Bytes<32>,
+    policy_salt
+  ]);
+}
+
+// Optional Pre-Award Governance: Issuer / Compliance Auditor cryptographically commits to a private
+// policy band [min_band, max_band] + salt without disclosing the bounds on-chain.
+// Once locked, the winner MUST prove compliance against this exact committed band (blocks forged bands).
+export circuit lock_compliance_policy(): [] {
+  assert(phase == TenderPhase.open || phase == TenderPhase.revealing, "Policy must be locked prior to award");
+  assert(!policy_locked, "Compliance policy already locked");
+
+  const sk = local_secret_key();
+  assert(derive_pk(sk) == issuer_pk, "Only issuer can lock compliance policy");
+
+  const band = get_audit_band();
+  const min_band = band[0];
+  const max_band = band[1];
+  const policy_salt = get_policy_salt();
+
+  assert(min_band > 0, "Policy floor must be positive");
+  assert(min_band <= max_band, "Invalid audit band");
+  assert(max_band <= reserve_cap, "Policy ceiling exceeds reserve cap");
+
+  const commit = make_policy_commitment(tender_id, min_band, max_band, policy_salt);
+  policy_commitment = disclose(commit);
+  policy_locked = true;
 }
 
 // Phase 1: Sealed-bid commit with ZERO-KNOWLEDGE range proof (0 < bid <= reserve_cap)
@@ -184,6 +227,8 @@ export circuit finalize_award(): [] {
 
 // Phase 4: Selective Compliance Disclosure — winner proves winning bid falls within a private
 // auditor/procurement policy band [min_band, max_band] without exposing the policy bounds on-chain!
+// If issuer called lock_compliance_policy(), the winner also proves in ZK that [min_band, max_band, policy_salt]
+// opens the on-chain policy_commitment — preventing self-attested forged policy bands.
 export circuit prove_compliance_band(): [] {
   assert(phase == TenderPhase.awarded, "Tender must be awarded first");
   const sk = local_secret_key();
@@ -195,6 +240,12 @@ export circuit prove_compliance_band(): [] {
   assert(min_band <= max_band, "Invalid audit band");
   assert(winning_bid >= min_band, "Winning bid below compliance floor");
   assert(winning_bid <= max_band, "Winning bid above compliance ceiling");
+
+  if (policy_locked) {
+    const policy_salt = get_policy_salt();
+    const expected_policy = make_policy_commitment(tender_id, min_band, max_band, policy_salt);
+    assert(expected_policy == policy_commitment, "Compliance band does not match locked policy commitment");
+  }
 
   const band_hash = persistentHash<Vector<4, Bytes<32>>>([
     pad(32, "veiltender:audit:v1"),

@@ -15,6 +15,8 @@ const DAVE_SK = new Uint8Array(32).fill(0x44);
 const SALT_A = new Uint8Array(32).fill(0xa1);
 const SALT_B = new Uint8Array(32).fill(0xb2);
 const SALT_C = new Uint8Array(32).fill(0xc3);
+const POLICY_SALT = new Uint8Array(32).fill(0xd4);
+const WRONG_POLICY_SALT = new Uint8Array(32).fill(0xe5);
 const RESERVE_CAP = 100_000n;
 
 describe("VeilTender Midnight Compact ZK Contract", () => {
@@ -383,5 +385,161 @@ describe("VeilTender Midnight Compact ZK Contract", () => {
       /Tender must be awarded/,
     );
     await expect(sim.cancelTender(sim.issuer)).rejects.toThrow(/Cannot cancel after award/);
+  });
+
+  // === v1.3.0 Policy-Locked Selective Compliance ZK Circuit Tests (Circuit #8) ===
+
+  it("runs full 6-step policy-locked lifecycle without disclosing private policy bounds", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    expect(sim.getLedger().policy_locked).toBe(false);
+
+    const locked = await sim.lockCompliancePolicy(60_000n, 80_000n, POLICY_SALT);
+    expect(locked.policy_locked).toBe(true);
+    expect(locked.policy_commitment).toEqual(
+      pureCircuits.make_policy_commitment(TENDER_ID, 60_000n, 80_000n, POLICY_SALT),
+    );
+
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    const bob = sim.registerBidder("bob", BOB_SK);
+    await sim.submitSealedBid(alice, 86_000n, SALT_A);
+    await sim.submitSealedBid(bob, 69_500n, SALT_B);
+    await sim.closeBidding(sim.issuer);
+    await sim.revealBid(alice);
+    await sim.revealBid(bob);
+    await sim.finalizeAward(sim.issuer);
+
+    const attested = await sim.proveComplianceBand(bob, 60_000n, 80_000n, POLICY_SALT);
+    expect(attested.compliance_ok).toBe(true);
+    const settled = await sim.settleTender(sim.issuer);
+    expect(settled.phase).toBe(TenderPhase.settled);
+  });
+
+  it("blocks forged self-attested compliance band when policy_commitment is locked", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    await sim.lockCompliancePolicy(60_000n, 80_000n, POLICY_SALT);
+    const bob = sim.registerBidder("bob", BOB_SK);
+    await sim.submitSealedBid(bob, 69_500n, SALT_B);
+    await sim.closeBidding(sim.issuer);
+    await sim.revealBid(bob);
+    await sim.finalizeAward(sim.issuer);
+
+    // Winner tries forging a wider self-approved band [1, 100_000] to bypass auditor policy
+    await expect(
+      sim.proveComplianceBand(bob, 1n, RESERVE_CAP, POLICY_SALT),
+    ).rejects.toThrow(/Compliance band does not match locked policy commitment/);
+    expect(sim.getLedger().compliance_ok).toBe(false);
+  });
+
+  it("blocks compliance proof with correct bounds but wrong policy_salt", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    await sim.lockCompliancePolicy(60_000n, 80_000n, POLICY_SALT);
+    const bob = sim.registerBidder("bob", BOB_SK);
+    await sim.submitSealedBid(bob, 71_000n, SALT_B);
+    await sim.closeBidding(sim.issuer);
+    await sim.revealBid(bob);
+    await sim.finalizeAward(sim.issuer);
+
+    await expect(
+      sim.proveComplianceBand(bob, 60_000n, 80_000n, WRONG_POLICY_SALT),
+    ).rejects.toThrow(/Compliance band does not match locked policy commitment/);
+  });
+
+  it("enforces issuer-only authorization on lock_compliance_policy", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    await expect(
+      sim.lockCompliancePolicy(50_000n, 90_000n, POLICY_SALT, alice),
+    ).rejects.toThrow(/Only issuer can lock compliance policy/);
+    expect(sim.getLedger().policy_locked).toBe(false);
+  });
+
+  it("prevents locking compliance policy twice (immutability of auditor commitment)", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    await sim.lockCompliancePolicy(60_000n, 80_000n, POLICY_SALT);
+    await expect(
+      sim.lockCompliancePolicy(50_000n, 95_000n, WRONG_POLICY_SALT),
+    ).rejects.toThrow(/Compliance policy already locked/);
+  });
+
+  it("rejects locking compliance policy after award or cancellation", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    await sim.submitSealedBid(alice, 72_000n, SALT_A);
+    await sim.closeBidding(sim.issuer);
+    await sim.revealBid(alice);
+    await sim.finalizeAward(sim.issuer);
+
+    await expect(
+      sim.lockCompliancePolicy(60_000n, 80_000n, POLICY_SALT),
+    ).rejects.toThrow(/Policy must be locked prior to award/);
+
+    const sim2 = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    await sim2.cancelTender(sim2.issuer);
+    await expect(
+      sim2.lockCompliancePolicy(60_000n, 80_000n, POLICY_SALT),
+    ).rejects.toThrow(/Policy must be locked prior to award/);
+  });
+
+  it("enforces ZK policy bounds: rejects zero floor, inverted band, and ceiling > reserve_cap", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    await expect(
+      sim.lockCompliancePolicy(0n, 80_000n, POLICY_SALT),
+    ).rejects.toThrow(/Policy floor must be positive/);
+    await expect(
+      sim.lockCompliancePolicy(85_000n, 70_000n, POLICY_SALT),
+    ).rejects.toThrow(/Invalid audit band/);
+    await expect(
+      sim.lockCompliancePolicy(60_000n, RESERVE_CAP + 1n, POLICY_SALT),
+    ).rejects.toThrow(/Policy ceiling exceeds reserve cap/);
+    expect(sim.getLedger().policy_locked).toBe(false);
+  });
+
+  it("allows locking compliance policy during revealing phase prior to award", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    await sim.submitSealedBid(alice, 75_000n, SALT_A);
+    await sim.closeBidding(sim.issuer);
+
+    const locked = await sim.lockCompliancePolicy(70_000n, 85_000n, POLICY_SALT);
+    expect(locked.policy_locked).toBe(true);
+    await sim.revealBid(alice);
+    await sim.finalizeAward(sim.issuer);
+
+    await expect(
+      sim.proveComplianceBand(alice, 65_000n, 90_000n, POLICY_SALT),
+    ).rejects.toThrow(/Compliance band does not match locked policy commitment/);
+
+    const attested = await sim.proveComplianceBand(alice, 70_000n, 85_000n, POLICY_SALT);
+    expect(attested.compliance_ok).toBe(true);
+  });
+
+  it("domain-separates policy commitments across tender_id and policy_salt", () => {
+    const otherTenderId = new Uint8Array(32).fill(0x77);
+    const p1 = pureCircuits.make_policy_commitment(TENDER_ID, 60_000n, 80_000n, POLICY_SALT);
+    const p2 = pureCircuits.make_policy_commitment(otherTenderId, 60_000n, 80_000n, POLICY_SALT);
+    const p3 = pureCircuits.make_policy_commitment(TENDER_ID, 60_000n, 80_000n, WRONG_POLICY_SALT);
+    expect(p1).not.toEqual(p2);
+    expect(p1).not.toEqual(p3);
+  });
+
+  it("blocks settlement when winning bid falls outside locked policy band even with authentic policy_salt", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    // Auditor privately requires bids within [70_000, 90_000]; Bob bids abnormally low 55_000
+    await sim.lockCompliancePolicy(70_000n, 90_000n, POLICY_SALT);
+    const bob = sim.registerBidder("bob", BOB_SK);
+    await sim.submitSealedBid(bob, 55_000n, SALT_B);
+    await sim.closeBidding(sim.issuer);
+    await sim.revealBid(bob);
+    await sim.finalizeAward(sim.issuer);
+
+    await expect(
+      sim.proveComplianceBand(bob, 70_000n, 90_000n, POLICY_SALT),
+    ).rejects.toThrow(/Winning bid below compliance floor/);
+    await expect(
+      sim.proveComplianceBand(bob, 50_000n, 60_000n, POLICY_SALT),
+    ).rejects.toThrow(/Compliance band does not match locked policy commitment/);
+    await expect(sim.settleTender(sim.issuer)).rejects.toThrow(
+      /Compliance attestation required before settlement/,
+    );
   });
 });
