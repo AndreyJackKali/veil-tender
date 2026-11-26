@@ -8,6 +8,8 @@
 - **License:** Apache License 2.0 (`LICENSE`)
 - **Compiler Verified:** Official Midnight `compact 0.36.1` (`@midnight-ntwrk/compact-runtime 0.21.0`) — **8 ZK circuits compiled cleanly** + **31/31 real Compact-runtime Vitest simulation & adversarial tests passing** + deterministic CLI auditor receipt generator (`pkgs/cli/audit-receipt.mjs`) + independent cryptographic receipt verifier (`pkgs/cli/verify-receipt.mjs`) + automated GitHub Actions CI.
 
+> **Real vs. simulated (read before judging the web demo).** Real: `veil_tender.compact` compiled with `compact 0.36.1` (the ZKIR sizes and SHA-256 values shown in the dApp are those of `pkgs/contract/src/managed/veil_tender/zkir/*`), 31 Vitest cases that run the generated contract through `@midnight-ntwrk/compact-runtime`, and the CLI receipt generator/verifier. Simulated: the GitHub Pages dApp does not submit transactions — its buttons drive a browser model of the contract ledger and witnesses, and "Connect Midnight Lace" only checks the wallet connector. The contract has not been deployed to Midnight Testnet yet.
+
 ---
 
 ## Why VeilTender?

@@ -204,12 +204,17 @@
         <span class="circuit-pill">cancel_tender()</span>
       </div>
       <div class="stepper" id="stepper"></div>
+      <div style="margin-top:12px;border:1px solid #3b4a6b;border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.5;color:#c9d4ea;background:#111a2e">
+        <b style="color:#ffd166">How to read this demo — real vs. simulated</b><br>
+        <b style="color:#5eead4">Real:</b> <code>veil_tender.compact</code> compiled by <code>compact 0.36.1</code> (ZKIR sizes and SHA-256 in panel 4 come from that build); 31 Vitest cases execute the generated contract through <code>@midnight-ntwrk/compact-runtime</code>; the receipt verifier is the same code as <code>pkgs/cli/verify-receipt.mjs</code>.<br>
+        <b style="color:#fca5a5">Simulated:</b> this page does not submit transactions. Every button runs a browser model of the contract's ledger and witnesses, so the "public ledger" panel shows what the contract would expose, not data read from a Midnight network. The contract is not deployed to Midnight Testnet yet.
+      </div>
     </div>
 
     <div class="card">
       <div class="section-title">
-        <span>On-Chain Public Ledger Telemetry</span>
-        <span class="badge public">PUBLIC STATE</span>
+        <span>Public Ledger State (simulated)</span>
+        <span class="badge public">MIRRORS CONTRACT LEDGER</span>
       </div>
       <div class="kpi-row">
         <div class="kpi"><div class="lbl">Phase</div><div class="val" id="kpiPhase">OPEN</div></div>
@@ -505,8 +510,8 @@ async function connectLace() {
   try {
     await mn.enable();
     document.getElementById("walletDot").className = "dot";
-    document.getElementById("walletStatus").textContent = "Connected: Midnight Lace Wallet";
-    log("Connected to Midnight Lace DApp Connector successfully.", "ok");
+    document.getElementById("walletStatus").textContent = "Lace connected (read-only) — actions still run in the local simulator";
+    log("Connected to Midnight Lace DApp Connector. Note: this demo does not submit transactions; all circuit calls below run in the local simulator.", "ok");
   } catch (e) {
     log("Lace wallet connection declined: " + e.message, "err");
   }
