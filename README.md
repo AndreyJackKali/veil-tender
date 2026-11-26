@@ -1,14 +1,32 @@
-# VeilTender v1.3.0 — Zero-Knowledge Sealed-Bid Procurement & Policy-Locked Compliance Escrow on Midnight
+# VeilTender v1.4.0 — Zero-Knowledge Sealed-Bid Procurement & Policy-Locked Compliance Escrow on Midnight
 
-> **Privacy-first enterprise RFQs, DAO grants, and OTC block tenders powered by Midnight Compact zero-knowledge circuits — now with Pre-Award Policy-Locked Selective Compliance (`lock_compliance_policy`) and Independent Offline Receipt Verification.**
+> **Privacy-first enterprise RFQs, DAO grants, and OTC block tenders powered by Midnight Compact 0.36.1 zero-knowledge circuits — featuring Pre-Award Policy-Locked Selective Compliance (`lock_compliance_policy`), a Real Compiled Compact 0.36.1 Circuit & Artifact Inspector, a 1-Click 60-Second Guided Judge Tour, and Independent Offline Auditor Receipt Verification.**
 
-- **Live Interactive dApp (Lace Wallet + Dual-Ledger ZK Simulator + Offline Receipt Verifier):** `https://andreyjackkali.github.io/veil-tender/`
-- **Interactive Pitch Deck:** `https://andreyjackkali.github.io/veil-tender/deck.html`
+- **Live Interactive dApp (Local Dual-Ledger Simulator + Real Compact 0.36.1 Artifact Inspector):** `https://andreyjackkali.github.io/veil-tender/`
+- **1-Click 60-Second Guided Judge Tour:** `https://andreyjackkali.github.io/veil-tender/#tour`
+- **Interactive Judge Pitch Deck (10 Slides):** `https://andreyjackkali.github.io/veil-tender/deck.html`
 - **Narrated Walkthrough Video:** `https://andreyjackkali.github.io/veil-tender/demo.mp4`
 - **License:** Apache License 2.0 (`LICENSE`)
-- **Compiler Verified:** Official Midnight `compact 0.36.1` (`@midnight-ntwrk/compact-runtime 0.21.0`) — **8 ZK circuits compiled cleanly** + **31/31 real Compact-runtime Vitest simulation & adversarial tests passing** + deterministic CLI auditor receipt generator (`pkgs/cli/audit-receipt.mjs`) + independent cryptographic receipt verifier (`pkgs/cli/verify-receipt.mjs`) + automated GitHub Actions CI.
+- **Compiler & Runtime Verified:** Official Midnight `compact 0.36.1` (`@midnight-ntwrk/compact-runtime 0.21.0`) — **8 ZK circuits compiled cleanly** (`625` BLS12-381 ZKIR instructions, `41` assertions, `129.05 MiB` proving keys) + **47/47 automated Vitest tests passing** (37 real Compact-runtime simulation & adversarial tests + 10 Compact artifact integrity & receipt tamper tests) + automated GitHub Actions CI.
 
-> **Real vs. simulated (read before judging the web demo).** Real: `veil_tender.compact` compiled with `compact 0.36.1` (the ZKIR sizes and SHA-256 values shown in the dApp are those of `pkgs/contract/src/managed/veil_tender/zkir/*`), 31 Vitest cases that run the generated contract through `@midnight-ntwrk/compact-runtime`, and the CLI receipt generator/verifier. Simulated: the GitHub Pages dApp does not submit transactions — its buttons drive a browser model of the contract ledger and witnesses, and "Connect Midnight Lace" only checks the wallet connector. The contract has not been deployed to Midnight Testnet yet.
+> **Real vs. simulated (read before judging the web demo).**
+> - **Real:** `pkgs/contract/src/veil_tender.compact` compiled with official `compact 0.36.1` into 8 `.zkir`/`.bzkir` circuits and `.prover`/`.verifier` keys (`pkgs/contract/src/managed/veil_tender/`); build-time extracted `docs/compact-artifacts.json` cross-checked against the compiler's own `contract-manifest.json`; **47 Vitest tests** executing the real generated contract through `@midnight-ntwrk/compact-runtime 0.21.0` plus end-to-end receipt verification; and the standalone CLI receipt generator/verifier (`pkgs/cli/audit-receipt.mjs`, `pkgs/cli/verify-receipt.mjs`).
+> - **Simulated:** The static GitHub Pages dApp does **not** submit live Midnight Testnet transactions yet. Its buttons drive a local browser model mirroring the contract ledger & private witnesses so judges can inspect dual-ledger privacy, adversarial rejections, and receipt verification with zero wallet/faucet friction, and "Connect Lace" checks the DApp connector extension only.
+
+---
+
+## What's New in v1.4.0
+
+1. **Real Compiled Compact 0.36.1 Circuit & Artifact Inspector (`docs/compact-artifacts.json` + in-app Explorer):**
+   - Build-time generator (`pkgs/cli/generate-artifact-manifest.mjs`) parses real compiled `.zkir`, `.bzkir`, `.prover`, `.verifier`, `contract-info.json`, `contract-manifest.json`, and `veil_tender.compact`.
+   - Judges can click any of the **8 compiled ZK circuits** right in the browser to verify exact file sizes, full SHA-256 digests, real BLS12-381 ZKIR instruction breakdowns (`private_input`, `public_input`, `persistent_hash`, `assert`, `constrain_bits`, `impact`), private witnesses consumed vs explicit `disclose()` outputs, and the full **6 Private Witnesses vs 25 Public Ledger Fields** schema boundary.
+2. **1-Click 60-Second Guided Judge Tour (`index.html#tour`):**
+   - Walks a judge step-by-step through (a) creating a `$100k` sealed-bid procurement tender + locking a private auditor policy corridor, (b) committing 3 sealed bids with SHA-256 commitments + live Midnight vs Public EVM leakage diff, (c) executing all 4 core adversarial exploit rejections (`Double-Bid`, `Bid Tamper`, `Premature Reveal`, `Compliance Bypass`), and (d) exporting & cryptographically verifying an Offline Auditor Receipt JSON (`8/8` ZKIR fingerprints).
+3. **Upgraded 10-Slide Judge Pitch Deck (`docs/deck.html`):**
+   - Covers problem, Midnight dual-ledger architecture, all 8 compiled circuits, security invariants, an honest Real-vs-Simulated matrix, verified benchmarks, business viability, and post-Wave roadmap.
+4. **Expanded 47-Test Automated Suite (`pkgs/contract/src/test/`):**
+   - `37` real `@midnight-ntwrk/compact-runtime` lifecycle, policy-lock, multi-slot, and adversarial security tests (`veil-tender.test.ts`).
+   - `10` Compact 0.36.1 artifact manifest integrity & offline receipt tamper-resistance tests (`artifacts-and-receipt.test.ts`).
 
 ---
 
@@ -30,7 +48,7 @@ Public blockchains break competitive bidding: every bid sits in plaintext in the
 
 ## Smart Contract Architecture (`pkgs/contract/src/veil_tender.compact`)
 
-VeilTender v1.3.0 compiles **8 zero-knowledge Compact circuits** (`compact 0.36.1`) plus **3 pure cryptographic helper circuits**:
+VeilTender compiles **8 zero-knowledge Compact circuits** (`compact 0.36.1`) plus **3 pure cryptographic helper circuits**:
 
 ```text
 [Phase 0: open]
@@ -54,12 +72,6 @@ VeilTender v1.3.0 compiles **8 zero-knowledge Compact circuits** (`compact 0.36.
    └─ cancel_tender()           ← Emergency issuer cancellation allowed strictly prior to award
 ```
 
-### Compiler-Enforced Information-Flow Privacy
-Midnight's Compact compiler statically enforces witness non-disclosure across all 8 circuits:
-- In `lock_compliance_policy`, `get_audit_band()` and `get_policy_salt()` are **never wrapped in `disclose()`** — only the domain-separated `policy_commitment` (`"veiltender:policy:v1"`) reaches the public ledger.
-- In `submit_sealed_bid`, `get_bid_amount()` and `get_bid_salt()` are **never wrapped in `disclose()`** — the compiler guarantees zero leakage of bid values to public ledger state.
-- In `prove_compliance_band`, `[min_band, max_band]` and `policy_salt` stay strictly private while cryptographically proving membership in the exact auditor-locked policy corridor.
-
 ---
 
 ## Repository Structure
@@ -75,17 +87,20 @@ veil-tender/
 │   │       ├── veil_tender.compact              # Main Compact ZK smart contract (8 circuits + 3 pure helpers)
 │   │       ├── witnesses.ts                     # Private-state types & local witness handlers
 │   │       ├── index.ts                         # Package entrypoint
-│   │       ├── managed/veil_tender/             # Compiled Compact JS bindings + .d.ts + 8 .zkir/.bzkir circuits
+│   │       ├── managed/veil_tender/             # Compiled Compact JS bindings + .d.ts + 8 .zkir/.bzkir/.prover/.verifier
 │   │       └── test/
 │   │           ├── veil-tender-simulator.ts     # Multi-party Midnight dual-ledger runtime simulator
-│   │           └── veil-tender.test.ts          # 31 comprehensive unit, policy-lock & adversarial security tests
+│   │           ├── veil-tender.test.ts          # 37 real Compact-runtime lifecycle, policy-lock & adversarial tests
+│   │           └── artifacts-and-receipt.test.ts # 10 Compact artifact integrity & offline receipt tamper tests
 │   └── cli/
+│       ├── generate-artifact-manifest.mjs       # Build-time Compact 0.36.1 metadata & ZKIR extractor -> docs/compact-artifacts.json
 │       ├── demo.mjs                             # End-to-end 6-phase Policy-Locked CLI simulation
 │       ├── audit-receipt.mjs                    # Deterministic Auditor ZK Compliance Receipt v2 CLI
 │       └── verify-receipt.mjs                   # Independent cryptographic receipt & 8-circuit ZKIR verifier CLI
 └── docs/
-    ├── index.html                               # Live Interactive Web dApp (Lace Wallet + Privacy Diff + 8-Attack Lab + Offline Verifier)
-    ├── deck.html                                # 8-Slide Interactive Pitch Deck
+    ├── index.html                               # Interactive Web dApp (60s Judge Tour + Compact Inspector + 9-Attack Lab + Verifier)
+    ├── compact-artifacts.json                   # Build-time verified Compact 0.36.1 circuit/witness/ledger manifest
+    ├── deck.html                                # 10-Slide Interactive Judge Pitch Deck
     └── demo.mp4                                 # 57s Narrated HD Walkthrough Video
 ```
 
@@ -93,19 +108,21 @@ veil-tender/
 
 ## Quick Verification (Reproducible on Linux / macOS)
 
-### 1. Recompile All 8 Compact Circuits
+### 1. Recompile All 8 Compact Circuits & Refresh Artifact Manifest
 ```bash
 compact --version   # verified with compact 0.5.3 / compiler 0.36.1
 cd pkgs/contract
 npm run compact
+npm run manifest
 ```
 
-### 2. Typecheck & Run Real `@midnight-ntwrk/compact-runtime` Tests (31/31)
+### 2. Typecheck, Build & Run All 47 Automated Tests
 ```bash
 cd pkgs/contract
 npm ci
 npm run typecheck
-npm test
+npm test            # 47/47 passing (37 Compact runtime + 10 artifact/receipt integrity)
+npm run build
 ```
 
 ### 3. Run End-to-End Policy-Locked CLI & Independent Receipt Verification

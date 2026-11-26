@@ -62,7 +62,7 @@ async function main() {
     return res.context.callContext.currentPrivateState ?? ps;
   };
 
-  console.log("=== VeilTender v1.3.0 Midnight Compact 0.36.1 End-to-End Policy-Locked Proof Walkthrough ===");
+  console.log("=== VeilTender v1.4.0 Midnight Compact 0.36.1 End-to-End Policy-Locked Proof Walkthrough ===");
   console.log("Initial ledger:", { phase: TenderPhase[ledger(shared).phase], reserveCap: ledger(shared).reserve_cap.toString(), issuerPk: hex(ledger(shared).issuer_pk) });
 
   issuerPS = await call("lock_compliance_policy", issuerPS, issuer.pkHex);

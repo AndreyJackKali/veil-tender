@@ -1,0 +1,1802 @@
+{
+  "schema": "veiltender.compact_artifacts.v1",
+  "version": "1.4.0",
+  "source": {
+    "path": "pkgs/contract/src/veil_tender.compact",
+    "lines": 276,
+    "bytes": 10293,
+    "sha256": "1f2ff760ba00758d0f33ee8524ce77c4666fccb0fec1e4a45e063529696d856f"
+  },
+  "compiler": {
+    "version": "0.36.1",
+    "commit": "7fa3a117c5e7efe9d2c51da04263e5f0b3509144",
+    "languageVersion": "0.28.0",
+    "runtimeVersion": "0.21.0",
+    "contractInfoSha256": "d2af374c84f56f4c0a3b23abbde8c26402d63e1062ddf3ba83b3c9395427cbf8",
+    "contractManifestSha256": "93c557f1f12240553b9902341eeda36b3450d05b5890bbf34c03f487d9cb9990",
+    "verifiedAgainstCompilerManifest": true
+  },
+  "totals": {
+    "proofCircuitCount": 8,
+    "pureHelperCount": 3,
+    "witnessCount": 6,
+    "ledgerFieldCount": 25,
+    "totalZkirBytes": 56404,
+    "totalBzkirBytes": 16385,
+    "totalProverBytes": 135317633,
+    "totalVerifierBytes": 16968,
+    "totalZkirInstructions": 625,
+    "totalPersistentHashes": 13,
+    "totalAssertions": 41
+  },
+  "circuits": [
+    {
+      "name": "lock_compliance_policy",
+      "pure": false,
+      "proof": true,
+      "sourceRange": "L109-L128",
+      "sourceSnippet": "export circuit lock_compliance_policy(): [] {\n  assert(phase == TenderPhase.open || phase == TenderPhase.revealing, \"Policy must be locked prior to award\");\n  assert(!policy_locked, \"Compliance policy already locked\");\n\n  const sk = local_secret_key();\n  assert(derive_pk(sk) == issuer_pk, \"Only issuer can lock compliance policy\");\n\n  const band = get_audit_band();\n  const min_band = band[0];\n  const max_band = band[1];\n  const policy_salt = get_policy_salt();\n\n  assert(min_band > 0, \"Policy floor must be positive\");\n  assert(min_band <= max_band, \"Invalid audit band\");\n  assert(max_band <= reserve_cap, \"Policy ceiling exceeds reserve cap\");\n\n  const commit = make_policy_commitment(tender_id, min_band, max_band, policy_salt);\n  policy_commitment = disclose(commit);\n  policy_locked = true;\n}",
+      "phase": "Phase 0 (Pre-Award Governance)",
+      "actor": "Issuer / Compliance Auditor",
+      "summary": "Locks a private auditor compliance corridor [min_band, max_band] + policy_salt on-chain via domain-separated persistentHash without disclosing the bounds.",
+      "witnessesUsed": [
+        "local_secret_key",
+        "get_audit_band",
+        "get_policy_salt"
+      ],
+      "ledgerWritten": [
+        "policy_commitment",
+        "policy_locked"
+      ],
+      "disclosedValues": [
+        "policy_commitment (32-byte hash)"
+      ],
+      "hiddenValues": [
+        "sk",
+        "min_band",
+        "max_band",
+        "policy_salt"
+      ],
+      "artifacts": {
+        "zkir": {
+          "file": "zkir/lock_compliance_policy.zkir",
+          "bytes": 6765,
+          "sha256": "a83edcd20e58c1264a10ea1077cbb756ece1a5b6f1c85081835bcb10d9e30cb7"
+        },
+        "bzkir": {
+          "file": "zkir/lock_compliance_policy.bzkir",
+          "bytes": 1860,
+          "sha256": "6039a5c1a011daea4b820dedff53b7466e3eb04d068bbb341dbd9031f4e6f505"
+        },
+        "prover": {
+          "file": "keys/lock_compliance_policy.prover",
+          "bytes": 22550612,
+          "sha256": "9ec4fa7e346d176ed8b81cca6c46729f5e38b31de03898712e0fadcae1db7d04"
+        },
+        "verifier": {
+          "file": "keys/lock_compliance_policy.verifier",
+          "bytes": 2121,
+          "sha256": "993a846cd86bc60b58d903e9f23ed2a438e26586201fc56f577fee48c1a4a616"
+        }
+      },
+      "zkirMetrics": {
+        "zkirVersion": "3.1",
+        "doCommunicationsCommitment": true,
+        "instructionCount": 73,
+        "privateInputs": 6,
+        "publicInputs": 8,
+        "persistentHashes": 2,
+        "assertions": 6,
+        "constrainBits": 6,
+        "lessThans": 3,
+        "impacts": 28,
+        "opCounts": {
+          "public_input": 8,
+          "impact": 28,
+          "test_eq": 4,
+          "cond_select": 6,
+          "assert": 6,
+          "private_input": 6,
+          "constrain_bits": 6,
+          "persistent_hash": 2,
+          "bytes_into_natives": 2,
+          "less_than": 3,
+          "div_mod_power_of_two": 2
+        },
+        "sampleInstructions": [
+          {
+            "op": "public_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%t.0",
+            "guard": null
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x30"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x51",
+              "0x01",
+              "0x01",
+              "0x00",
+              "0x01",
+              "0x01",
+              "0x00"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x0c",
+              "0x01",
+              "0x01",
+              "%t.0"
+            ]
+          },
+          {
+            "op": "test_eq",
+            "output": "%t.1",
+            "a": "%t.0",
+            "b": "0x00"
+          },
+          {
+            "op": "cond_select",
+            "output": "%t.2",
+            "bit": "%t.1",
+            "a": "0x00",
+            "b": "0x01"
+          },
+          {
+            "op": "public_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%t.3",
+            "guard": "%t.2"
+          },
+          {
+            "op": "impact",
+            "guard": "%t.2",
+            "inputs": [
+              "0x30"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "%t.2",
+            "inputs": [
+              "0x51",
+              "0x01",
+              "0x01",
+              "0x00",
+              "0x01",
+              "0x01",
+              "0x00"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "%t.2",
+            "inputs": [
+              "0x0c",
+              "0x01",
+              "0x01",
+              "%t.3"
+            ]
+          },
+          {
+            "op": "test_eq",
+            "output": "%t.4",
+            "a": "%t.3",
+            "b": "0x01"
+          },
+          {
+            "op": "cond_select",
+            "output": "%t.5",
+            "bit": "%t.1",
+            "a": "0x01",
+            "b": "%t.4"
+          }
+        ]
+      }
+    },
+    {
+      "name": "submit_sealed_bid",
+      "pure": false,
+      "proof": true,
+      "sourceRange": "L132-L171",
+      "sourceSnippet": "export circuit submit_sealed_bid(): [] {\n  assert(phase == TenderPhase.open, \"Tender is not accepting sealed bids\");\n\n  const sk = local_secret_key();\n  const pk = derive_pk(sk);\n  const amount = get_bid_amount();\n  const salt = get_bid_salt();\n\n  // Zero-knowledge range proof: proves bid is strictly positive and within public reserve cap\n  // without disclosing `amount` to the ledger or competing bidders!\n  assert(amount > 0, \"Bid amount must be positive\");\n  assert(amount <= reserve_cap, \"Bid exceeds tender reserve cap\");\n\n  // Prevent issuer self-bidding and duplicate bids from the same identity\n  assert(pk != issuer_pk, \"Issuer cannot bid on own tender\");\n  assert(!slot0_used || pk != slot0_bidder, \"Bidder already submitted\");\n  assert(!slot1_used || pk != slot1_bidder, \"Bidder already submitted\");\n  assert(!slot2_used || pk != slot2_bidder, \"Bidder already submitted\");\n\n  const commitment = make_bid_commitment(tender_id, pk, amount, salt);\n  store_bid_receipt(amount, salt);\n\n  if (!slot0_used) {\n    slot0_bidder = disclose(pk);\n    slot0_commit = disclose(commitment);\n    slot0_used = true;\n    bid_count.increment(1);\n  } else if (!slot1_used) {\n    slot1_bidder = disclose(pk);\n    slot1_commit = disclose(commitment);\n    slot1_used = true;\n    bid_count.increment(1);\n  } else {\n    assert(!slot2_used, \"All sealed bid slots are full\");\n    slot2_bidder = disclose(pk);\n    slot2_commit = disclose(commitment);\n    slot2_used = true;\n    bid_count.increment(1);\n  }\n}",
+      "phase": "Phase 1 (Sealed Bidding)",
+      "actor": "Bidder",
+      "summary": "Proves 0 < amount <= reserve_cap in ZK, enforces pk != issuer_pk and single-bid-per-identity, stores local receipt, and discloses only bidder pk + salted bid commitment.",
+      "witnessesUsed": [
+        "local_secret_key",
+        "get_bid_amount",
+        "get_bid_salt",
+        "store_bid_receipt"
+      ],
+      "ledgerWritten": [
+        "slotN_bidder",
+        "slotN_commit",
+        "slotN_used",
+        "bid_count"
+      ],
+      "disclosedValues": [
+        "pk = derive_pk(sk)",
+        "commitment = persistentHash(...)"
+      ],
+      "hiddenValues": [
+        "sk",
+        "amount (never disclosed during open phase)",
+        "salt"
+      ],
+      "artifacts": {
+        "zkir": {
+          "file": "zkir/submit_sealed_bid.zkir",
+          "bytes": 14258,
+          "sha256": "483f9f37dbf0b97b5e917d8fe479a0d53440243f2228d7f5244fc84d98a8f098"
+        },
+        "bzkir": {
+          "file": "zkir/submit_sealed_bid.bzkir",
+          "bytes": 4396,
+          "sha256": "0f8e023d5518b801f3fb34ffd73a7a52bce90daba13a55ac54e66cedb1ca3954"
+        },
+        "prover": {
+          "file": "keys/submit_sealed_bid.prover",
+          "bytes": 22553148,
+          "sha256": "07ee06bd29909d50b8a06498d455d678c799a4bbdfd8b9648a591ba0d3b7ae76"
+        },
+        "verifier": {
+          "file": "keys/submit_sealed_bid.verifier",
+          "bytes": 2121,
+          "sha256": "c9e57aa4cb086af36196e7238e35ab7ff17287c997e11288722182e03000820d"
+        }
+      },
+      "zkirMetrics": {
+        "zkirVersion": "3.1",
+        "doCommunicationsCommitment": true,
+        "instructionCount": 162,
+        "privateInputs": 5,
+        "publicInputs": 18,
+        "persistentHashes": 2,
+        "assertions": 8,
+        "constrainBits": 5,
+        "lessThans": 2,
+        "impacts": 93,
+        "opCounts": {
+          "public_input": 18,
+          "impact": 93,
+          "test_eq": 9,
+          "assert": 8,
+          "private_input": 5,
+          "constrain_bits": 5,
+          "persistent_hash": 2,
+          "bytes_into_natives": 2,
+          "less_than": 2,
+          "cond_select": 17,
+          "div_mod_power_of_two": 1
+        },
+        "sampleInstructions": [
+          {
+            "op": "public_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%t.0",
+            "guard": null
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x30"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x51",
+              "0x01",
+              "0x01",
+              "0x00",
+              "0x01",
+              "0x01",
+              "0x00"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x0c",
+              "0x01",
+              "0x01",
+              "%t.0"
+            ]
+          },
+          {
+            "op": "test_eq",
+            "output": "%t.1",
+            "a": "%t.0",
+            "b": "0x00"
+          },
+          {
+            "op": "assert",
+            "cond": "%t.1"
+          },
+          {
+            "op": "private_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%sk.2",
+            "guard": null
+          },
+          {
+            "op": "constrain_bits",
+            "val": "%sk.2",
+            "bits": 8
+          },
+          {
+            "op": "private_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%sk.3",
+            "guard": null
+          },
+          {
+            "op": "constrain_bits",
+            "val": "%sk.3",
+            "bits": 248
+          },
+          {
+            "op": "persistent_hash",
+            "output": "%bytes.4",
+            "alignment": [
+              {
+                "tag": "atom",
+                "value": {
+                  "length": 32,
+                  "tag": "bytes"
+                }
+              },
+              {
+                "tag": "atom",
+                "value": {
+                  "length": 32,
+                  "tag": "bytes"
+                }
+              }
+            ],
+            "inputs": [
+              "0x00",
+              "0x7665696c74656e6465723a706b3a7631",
+              "%sk.2",
+              "%sk.3"
+            ]
+          },
+          {
+            "op": "bytes_into_natives",
+            "outputs": [
+              "%pk.5",
+              "%pk.6"
+            ],
+            "bytes": "%bytes.4"
+          }
+        ]
+      }
+    },
+    {
+      "name": "close_bidding",
+      "pure": false,
+      "proof": true,
+      "sourceRange": "L174-L180",
+      "sourceSnippet": "export circuit close_bidding(): [] {\n  assert(phase == TenderPhase.open, \"Tender is not open\");\n  const sk = local_secret_key();\n  assert(derive_pk(sk) == issuer_pk, \"Only issuer can close bidding\");\n  assert(slot0_used, \"At least one sealed bid is required\");\n  phase = TenderPhase.revealing;\n}",
+      "phase": "Phase 1 -> 2 Transition",
+      "actor": "Issuer",
+      "summary": "Authenticates issuer via private sk, requires at least one sealed bid, and transitions ledger phase from open to revealing.",
+      "witnessesUsed": [
+        "local_secret_key"
+      ],
+      "ledgerWritten": [
+        "phase"
+      ],
+      "disclosedValues": [
+        "phase = TenderPhase.revealing"
+      ],
+      "hiddenValues": [
+        "sk"
+      ],
+      "artifacts": {
+        "zkir": {
+          "file": "zkir/close_bidding.zkir",
+          "bytes": 2767,
+          "sha256": "8bd0024d94fd6a1e042d0608db0fe0fd1faa7218a7c8126ee101952c09f7451d"
+        },
+        "bzkir": {
+          "file": "zkir/close_bidding.bzkir",
+          "bytes": 735,
+          "sha256": "fb390728489bc641213e7d0f581007c1479696be2073cfbb67fedc611e09f23c"
+        },
+        "prover": {
+          "file": "keys/close_bidding.prover",
+          "bytes": 11277295,
+          "sha256": "c7b8dddc6548c7fe79a61ae5a2274ca09808561f90f38dd8598b63a15a30b184"
+        },
+        "verifier": {
+          "file": "keys/close_bidding.verifier",
+          "bytes": 2121,
+          "sha256": "1ef509da6b31dc2c7f7634be638fce77e5d9960acdc8c7005af3e416b09016c9"
+        }
+      },
+      "zkirMetrics": {
+        "zkirVersion": "3.1",
+        "doCommunicationsCommitment": true,
+        "instructionCount": 31,
+        "privateInputs": 2,
+        "publicInputs": 4,
+        "persistentHashes": 1,
+        "assertions": 3,
+        "constrainBits": 2,
+        "lessThans": 0,
+        "impacts": 14,
+        "opCounts": {
+          "public_input": 4,
+          "impact": 14,
+          "test_eq": 3,
+          "assert": 3,
+          "private_input": 2,
+          "constrain_bits": 2,
+          "persistent_hash": 1,
+          "bytes_into_natives": 1,
+          "cond_select": 1
+        },
+        "sampleInstructions": [
+          {
+            "op": "public_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%t.0",
+            "guard": null
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x30"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x51",
+              "0x01",
+              "0x01",
+              "0x00",
+              "0x01",
+              "0x01",
+              "0x00"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x0c",
+              "0x01",
+              "0x01",
+              "%t.0"
+            ]
+          },
+          {
+            "op": "test_eq",
+            "output": "%t.1",
+            "a": "%t.0",
+            "b": "0x00"
+          },
+          {
+            "op": "assert",
+            "cond": "%t.1"
+          },
+          {
+            "op": "private_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%sk.2",
+            "guard": null
+          },
+          {
+            "op": "constrain_bits",
+            "val": "%sk.2",
+            "bits": 8
+          },
+          {
+            "op": "private_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%sk.3",
+            "guard": null
+          },
+          {
+            "op": "constrain_bits",
+            "val": "%sk.3",
+            "bits": 248
+          },
+          {
+            "op": "persistent_hash",
+            "output": "%bytes.4",
+            "alignment": [
+              {
+                "tag": "atom",
+                "value": {
+                  "length": 32,
+                  "tag": "bytes"
+                }
+              },
+              {
+                "tag": "atom",
+                "value": {
+                  "length": 32,
+                  "tag": "bytes"
+                }
+              }
+            ],
+            "inputs": [
+              "0x00",
+              "0x7665696c74656e6465723a706b3a7631",
+              "%sk.2",
+              "%sk.3"
+            ]
+          },
+          {
+            "op": "bytes_into_natives",
+            "outputs": [
+              "%t.5",
+              "%t.6"
+            ],
+            "bytes": "%bytes.4"
+          }
+        ]
+      }
+    },
+    {
+      "name": "reveal_bid",
+      "pure": false,
+      "proof": true,
+      "sourceRange": "L183-L217",
+      "sourceSnippet": "export circuit reveal_bid(): [] {\n  assert(phase == TenderPhase.revealing, \"Tender is not in reveal phase\");\n\n  const sk = local_secret_key();\n  const pk = disclose(derive_pk(sk));\n  const amount = disclose(get_bid_amount());\n  const salt = get_bid_salt();\n  const expected = make_bid_commitment(tender_id, pk, amount, salt);\n\n  assert(amount > 0, \"Revealed bid must be positive\");\n  assert(amount <= reserve_cap, \"Revealed bid exceeds reserve cap\");\n\n  if (slot0_used && pk == slot0_bidder) {\n    assert(!slot0_revealed, \"Slot 0 already revealed\");\n    assert(expected == slot0_commit, \"Commitment mismatch for slot 0\");\n    slot0_revealed = true;\n  } else if (slot1_used && pk == slot1_bidder) {\n    assert(!slot1_revealed, \"Slot 1 already revealed\");\n    assert(expected == slot1_commit, \"Commitment mismatch for slot 1\");\n    slot1_revealed = true;\n  } else {\n    assert(slot2_used && pk == slot2_bidder, \"Caller has no sealed bid\");\n    assert(!slot2_revealed, \"Slot 2 already revealed\");\n    assert(expected == slot2_commit, \"Commitment mismatch for slot 2\");\n    slot2_revealed = true;\n  }\n\n  reveal_count.increment(1);\n\n  if (!has_winner || amount < winning_bid) {\n    has_winner = true;\n    winner_pk = pk;\n    winning_bid = amount;\n  }\n}",
+      "phase": "Phase 2 (Reveal Window)",
+      "actor": "Committed Bidder",
+      "summary": "Verifies persistentHash(tid, pk, amount, salt) matches the bidder's committed slot, blocks replay, and deterministically tracks the lowest valid winning_bid.",
+      "witnessesUsed": [
+        "local_secret_key",
+        "get_bid_amount",
+        "get_bid_salt"
+      ],
+      "ledgerWritten": [
+        "slotN_revealed",
+        "reveal_count",
+        "has_winner",
+        "winner_pk",
+        "winning_bid"
+      ],
+      "disclosedValues": [
+        "pk",
+        "amount (only after bidding closes)"
+      ],
+      "hiddenValues": [
+        "sk",
+        "salt (never disclosed on-chain)"
+      ],
+      "artifacts": {
+        "zkir": {
+          "file": "zkir/reveal_bid.zkir",
+          "bytes": 15539,
+          "sha256": "82d67819943f0a4fb36a9c1e8873972623c14f8abd40d7b53cc1faa0036e894a"
+        },
+        "bzkir": {
+          "file": "zkir/reveal_bid.bzkir",
+          "bytes": 4691,
+          "sha256": "fc6792ab4f02bdeed716dadd2ca41379331b63f7e249445759de847c5a4c725c"
+        },
+        "prover": {
+          "file": "keys/reveal_bid.prover",
+          "bytes": 22553443,
+          "sha256": "5da9f1ecc1a27e9cf697925d7bd595b28bd4ba6573839054f8d9256bb649ef63"
+        },
+        "verifier": {
+          "file": "keys/reveal_bid.verifier",
+          "bytes": 2121,
+          "sha256": "9ee5ff7d8f415b2a3457afe37dac066def6a1407f387b6071b906b1734fc73d1"
+        }
+      },
+      "zkirMetrics": {
+        "zkirVersion": "3.1",
+        "doCommunicationsCommitment": true,
+        "instructionCount": 176,
+        "privateInputs": 5,
+        "publicInputs": 24,
+        "persistentHashes": 2,
+        "assertions": 10,
+        "constrainBits": 5,
+        "lessThans": 3,
+        "impacts": 84,
+        "opCounts": {
+          "public_input": 24,
+          "impact": 84,
+          "test_eq": 13,
+          "assert": 10,
+          "private_input": 5,
+          "constrain_bits": 5,
+          "persistent_hash": 2,
+          "bytes_into_natives": 2,
+          "div_mod_power_of_two": 1,
+          "less_than": 3,
+          "cond_select": 27
+        },
+        "sampleInstructions": [
+          {
+            "op": "public_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%t.0",
+            "guard": null
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x30"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x51",
+              "0x01",
+              "0x01",
+              "0x00",
+              "0x01",
+              "0x01",
+              "0x00"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x0c",
+              "0x01",
+              "0x01",
+              "%t.0"
+            ]
+          },
+          {
+            "op": "test_eq",
+            "output": "%t.1",
+            "a": "%t.0",
+            "b": "0x01"
+          },
+          {
+            "op": "assert",
+            "cond": "%t.1"
+          },
+          {
+            "op": "private_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%sk.2",
+            "guard": null
+          },
+          {
+            "op": "constrain_bits",
+            "val": "%sk.2",
+            "bits": 8
+          },
+          {
+            "op": "private_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%sk.3",
+            "guard": null
+          },
+          {
+            "op": "constrain_bits",
+            "val": "%sk.3",
+            "bits": 248
+          },
+          {
+            "op": "persistent_hash",
+            "output": "%bytes.4",
+            "alignment": [
+              {
+                "tag": "atom",
+                "value": {
+                  "length": 32,
+                  "tag": "bytes"
+                }
+              },
+              {
+                "tag": "atom",
+                "value": {
+                  "length": 32,
+                  "tag": "bytes"
+                }
+              }
+            ],
+            "inputs": [
+              "0x00",
+              "0x7665696c74656e6465723a706b3a7631",
+              "%sk.2",
+              "%sk.3"
+            ]
+          },
+          {
+            "op": "bytes_into_natives",
+            "outputs": [
+              "%pk.5",
+              "%pk.6"
+            ],
+            "bytes": "%bytes.4"
+          }
+        ]
+      }
+    },
+    {
+      "name": "finalize_award",
+      "pure": false,
+      "proof": true,
+      "sourceRange": "L220-L226",
+      "sourceSnippet": "export circuit finalize_award(): [] {\n  assert(phase == TenderPhase.revealing, \"Tender is not in reveal phase\");\n  const sk = local_secret_key();\n  assert(derive_pk(sk) == issuer_pk, \"Only issuer can finalize award\");\n  assert(has_winner, \"No revealed bids to award\");\n  phase = TenderPhase.awarded;\n}",
+      "phase": "Phase 2 -> 3 Transition",
+      "actor": "Issuer",
+      "summary": "Authenticates issuer and requires at least one revealed bid (has_winner == true) before locking phase = awarded.",
+      "witnessesUsed": [
+        "local_secret_key"
+      ],
+      "ledgerWritten": [
+        "phase"
+      ],
+      "disclosedValues": [
+        "phase = TenderPhase.awarded"
+      ],
+      "hiddenValues": [
+        "sk"
+      ],
+      "artifacts": {
+        "zkir": {
+          "file": "zkir/finalize_award.zkir",
+          "bytes": 2767,
+          "sha256": "ef7a879f9396f77604355886e016cd40714592b2041053c95f2b48153335022a"
+        },
+        "bzkir": {
+          "file": "zkir/finalize_award.bzkir",
+          "bytes": 735,
+          "sha256": "c3345cfaf5b1701da2667482f55e488d3525a741b501012f491b91339e5fa903"
+        },
+        "prover": {
+          "file": "keys/finalize_award.prover",
+          "bytes": 11277295,
+          "sha256": "7f528784759460d671945a06b4eadc884dcb34fec4e44b3a10b493090cd00ca6"
+        },
+        "verifier": {
+          "file": "keys/finalize_award.verifier",
+          "bytes": 2121,
+          "sha256": "356359fec3c790fd54958d1084bde6210ce4b4a7b6f11d3616b91666eda9a133"
+        }
+      },
+      "zkirMetrics": {
+        "zkirVersion": "3.1",
+        "doCommunicationsCommitment": true,
+        "instructionCount": 31,
+        "privateInputs": 2,
+        "publicInputs": 4,
+        "persistentHashes": 1,
+        "assertions": 3,
+        "constrainBits": 2,
+        "lessThans": 0,
+        "impacts": 14,
+        "opCounts": {
+          "public_input": 4,
+          "impact": 14,
+          "test_eq": 3,
+          "assert": 3,
+          "private_input": 2,
+          "constrain_bits": 2,
+          "persistent_hash": 1,
+          "bytes_into_natives": 1,
+          "cond_select": 1
+        },
+        "sampleInstructions": [
+          {
+            "op": "public_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%t.0",
+            "guard": null
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x30"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x51",
+              "0x01",
+              "0x01",
+              "0x00",
+              "0x01",
+              "0x01",
+              "0x00"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x0c",
+              "0x01",
+              "0x01",
+              "%t.0"
+            ]
+          },
+          {
+            "op": "test_eq",
+            "output": "%t.1",
+            "a": "%t.0",
+            "b": "0x01"
+          },
+          {
+            "op": "assert",
+            "cond": "%t.1"
+          },
+          {
+            "op": "private_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%sk.2",
+            "guard": null
+          },
+          {
+            "op": "constrain_bits",
+            "val": "%sk.2",
+            "bits": 8
+          },
+          {
+            "op": "private_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%sk.3",
+            "guard": null
+          },
+          {
+            "op": "constrain_bits",
+            "val": "%sk.3",
+            "bits": 248
+          },
+          {
+            "op": "persistent_hash",
+            "output": "%bytes.4",
+            "alignment": [
+              {
+                "tag": "atom",
+                "value": {
+                  "length": 32,
+                  "tag": "bytes"
+                }
+              },
+              {
+                "tag": "atom",
+                "value": {
+                  "length": 32,
+                  "tag": "bytes"
+                }
+              }
+            ],
+            "inputs": [
+              "0x00",
+              "0x7665696c74656e6465723a706b3a7631",
+              "%sk.2",
+              "%sk.3"
+            ]
+          },
+          {
+            "op": "bytes_into_natives",
+            "outputs": [
+              "%t.5",
+              "%t.6"
+            ],
+            "bytes": "%bytes.4"
+          }
+        ]
+      }
+    },
+    {
+      "name": "prove_compliance_band",
+      "pure": false,
+      "proof": true,
+      "sourceRange": "L232-L258",
+      "sourceSnippet": "export circuit prove_compliance_band(): [] {\n  assert(phase == TenderPhase.awarded, \"Tender must be awarded first\");\n  const sk = local_secret_key();\n  assert(derive_pk(sk) == winner_pk, \"Only awarded winner can attest compliance\");\n\n  const band = get_audit_band();\n  const min_band = band[0];\n  const max_band = band[1];\n  assert(min_band <= max_band, \"Invalid audit band\");\n  assert(winning_bid >= min_band, \"Winning bid below compliance floor\");\n  assert(winning_bid <= max_band, \"Winning bid above compliance ceiling\");\n\n  if (policy_locked) {\n    const policy_salt = get_policy_salt();\n    const expected_policy = make_policy_commitment(tender_id, min_band, max_band, policy_salt);\n    assert(expected_policy == policy_commitment, \"Compliance band does not match locked policy commitment\");\n  }\n\n  const band_hash = persistentHash<Vector<4, Bytes<32>>>([\n    pad(32, \"veiltender:audit:v1\"),\n    tender_id,\n    (min_band as Field) as Bytes<32>,\n    (max_band as Field) as Bytes<32>\n  ]);\n  compliance_hash = disclose(band_hash);\n  compliance_ok = true;\n}",
+      "phase": "Phase 4 (Selective Compliance ZK)",
+      "actor": "Awarded Winner",
+      "summary": "Proves winning_bid lies within private [min_band, max_band] and (when policy_locked) matches on-chain policy_commitment using private policy_salt — disclosing only compliance_hash.",
+      "witnessesUsed": [
+        "local_secret_key",
+        "get_audit_band",
+        "get_policy_salt"
+      ],
+      "ledgerWritten": [
+        "compliance_hash",
+        "compliance_ok"
+      ],
+      "disclosedValues": [
+        "compliance_hash (32-byte hash)",
+        "compliance_ok = true"
+      ],
+      "hiddenValues": [
+        "sk",
+        "min_band",
+        "max_band",
+        "policy_salt"
+      ],
+      "artifacts": {
+        "zkir": {
+          "file": "zkir/prove_compliance_band.zkir",
+          "bytes": 8560,
+          "sha256": "4456063a4bbf969c5a67b689b5ca6ff595da1ce8f20ea904449d620bba176b79"
+        },
+        "bzkir": {
+          "file": "zkir/prove_compliance_band.bzkir",
+          "bytes": 2426,
+          "sha256": "bf311a9999501e1592d845631483eb77c3c2fa0c494fab66426cf767a4896837"
+        },
+        "prover": {
+          "file": "keys/prove_compliance_band.prover",
+          "bytes": 22551178,
+          "sha256": "750058543a6b234ef2ec58987c3fe7e37e811402dc8cf71d971b5111a1d1fc5c"
+        },
+        "verifier": {
+          "file": "keys/prove_compliance_band.verifier",
+          "bytes": 2121,
+          "sha256": "96174988c20b096a3d380c9825b480fd647203d72bf7d26f6532e20a49c9d136"
+        }
+      },
+      "zkirMetrics": {
+        "zkirVersion": "3.1",
+        "doCommunicationsCommitment": true,
+        "instructionCount": 88,
+        "privateInputs": 6,
+        "publicInputs": 12,
+        "persistentHashes": 3,
+        "assertions": 6,
+        "constrainBits": 6,
+        "lessThans": 3,
+        "impacts": 34,
+        "opCounts": {
+          "public_input": 12,
+          "impact": 34,
+          "test_eq": 5,
+          "assert": 6,
+          "private_input": 6,
+          "constrain_bits": 6,
+          "persistent_hash": 3,
+          "bytes_into_natives": 3,
+          "cond_select": 6,
+          "less_than": 3,
+          "div_mod_power_of_two": 4
+        },
+        "sampleInstructions": [
+          {
+            "op": "public_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%t.0",
+            "guard": null
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x30"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x51",
+              "0x01",
+              "0x01",
+              "0x00",
+              "0x01",
+              "0x01",
+              "0x00"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x0c",
+              "0x01",
+              "0x01",
+              "%t.0"
+            ]
+          },
+          {
+            "op": "test_eq",
+            "output": "%t.1",
+            "a": "%t.0",
+            "b": "0x02"
+          },
+          {
+            "op": "assert",
+            "cond": "%t.1"
+          },
+          {
+            "op": "private_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%sk.2",
+            "guard": null
+          },
+          {
+            "op": "constrain_bits",
+            "val": "%sk.2",
+            "bits": 8
+          },
+          {
+            "op": "private_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%sk.3",
+            "guard": null
+          },
+          {
+            "op": "constrain_bits",
+            "val": "%sk.3",
+            "bits": 248
+          },
+          {
+            "op": "persistent_hash",
+            "output": "%bytes.4",
+            "alignment": [
+              {
+                "tag": "atom",
+                "value": {
+                  "length": 32,
+                  "tag": "bytes"
+                }
+              },
+              {
+                "tag": "atom",
+                "value": {
+                  "length": 32,
+                  "tag": "bytes"
+                }
+              }
+            ],
+            "inputs": [
+              "0x00",
+              "0x7665696c74656e6465723a706b3a7631",
+              "%sk.2",
+              "%sk.3"
+            ]
+          },
+          {
+            "op": "bytes_into_natives",
+            "outputs": [
+              "%t.5",
+              "%t.6"
+            ],
+            "bytes": "%bytes.4"
+          }
+        ]
+      }
+    },
+    {
+      "name": "settle_tender",
+      "pure": false,
+      "proof": true,
+      "sourceRange": "L261-L267",
+      "sourceSnippet": "export circuit settle_tender(): [] {\n  assert(phase == TenderPhase.awarded, \"Tender must be awarded before settlement\");\n  const sk = local_secret_key();\n  assert(derive_pk(sk) == issuer_pk, \"Only issuer can settle tender\");\n  assert(compliance_ok, \"Compliance attestation required before settlement\");\n  phase = TenderPhase.settled;\n}",
+      "phase": "Phase 5 (Escrow Settlement)",
+      "actor": "Issuer",
+      "summary": "Authenticates issuer and enforces compliance_ok == true before marking phase = settled.",
+      "witnessesUsed": [
+        "local_secret_key"
+      ],
+      "ledgerWritten": [
+        "phase"
+      ],
+      "disclosedValues": [
+        "phase = TenderPhase.settled"
+      ],
+      "hiddenValues": [
+        "sk"
+      ],
+      "artifacts": {
+        "zkir": {
+          "file": "zkir/settle_tender.zkir",
+          "bytes": 2767,
+          "sha256": "29584c5210b4371f7143651376c4e0e55eab220ee56b9b123cd89abfaec60a07"
+        },
+        "bzkir": {
+          "file": "zkir/settle_tender.bzkir",
+          "bytes": 735,
+          "sha256": "9a2ee94dcf382a3338419ba75404ec0ea903293c114308c6a609cc2217021bad"
+        },
+        "prover": {
+          "file": "keys/settle_tender.prover",
+          "bytes": 11277295,
+          "sha256": "4f8d314a90d6dba01558045dcb7037eccfffbb75334bfe8d79e8b53aa919a512"
+        },
+        "verifier": {
+          "file": "keys/settle_tender.verifier",
+          "bytes": 2121,
+          "sha256": "a48c830e9b60483111d8c173f65dff0d216e1aa72031081b45892513d9f1bcf8"
+        }
+      },
+      "zkirMetrics": {
+        "zkirVersion": "3.1",
+        "doCommunicationsCommitment": true,
+        "instructionCount": 31,
+        "privateInputs": 2,
+        "publicInputs": 4,
+        "persistentHashes": 1,
+        "assertions": 3,
+        "constrainBits": 2,
+        "lessThans": 0,
+        "impacts": 14,
+        "opCounts": {
+          "public_input": 4,
+          "impact": 14,
+          "test_eq": 3,
+          "assert": 3,
+          "private_input": 2,
+          "constrain_bits": 2,
+          "persistent_hash": 1,
+          "bytes_into_natives": 1,
+          "cond_select": 1
+        },
+        "sampleInstructions": [
+          {
+            "op": "public_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%t.0",
+            "guard": null
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x30"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x51",
+              "0x01",
+              "0x01",
+              "0x00",
+              "0x01",
+              "0x01",
+              "0x00"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x0c",
+              "0x01",
+              "0x01",
+              "%t.0"
+            ]
+          },
+          {
+            "op": "test_eq",
+            "output": "%t.1",
+            "a": "%t.0",
+            "b": "0x02"
+          },
+          {
+            "op": "assert",
+            "cond": "%t.1"
+          },
+          {
+            "op": "private_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%sk.2",
+            "guard": null
+          },
+          {
+            "op": "constrain_bits",
+            "val": "%sk.2",
+            "bits": 8
+          },
+          {
+            "op": "private_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%sk.3",
+            "guard": null
+          },
+          {
+            "op": "constrain_bits",
+            "val": "%sk.3",
+            "bits": 248
+          },
+          {
+            "op": "persistent_hash",
+            "output": "%bytes.4",
+            "alignment": [
+              {
+                "tag": "atom",
+                "value": {
+                  "length": 32,
+                  "tag": "bytes"
+                }
+              },
+              {
+                "tag": "atom",
+                "value": {
+                  "length": 32,
+                  "tag": "bytes"
+                }
+              }
+            ],
+            "inputs": [
+              "0x00",
+              "0x7665696c74656e6465723a706b3a7631",
+              "%sk.2",
+              "%sk.3"
+            ]
+          },
+          {
+            "op": "bytes_into_natives",
+            "outputs": [
+              "%t.5",
+              "%t.6"
+            ],
+            "bytes": "%bytes.4"
+          }
+        ]
+      }
+    },
+    {
+      "name": "cancel_tender",
+      "pure": false,
+      "proof": true,
+      "sourceRange": "L270-L275",
+      "sourceSnippet": "export circuit cancel_tender(): [] {\n  assert(phase == TenderPhase.open || phase == TenderPhase.revealing, \"Cannot cancel after award\");\n  const sk = local_secret_key();\n  assert(derive_pk(sk) == issuer_pk, \"Only issuer can cancel tender\");\n  phase = TenderPhase.cancelled;\n}",
+      "phase": "Emergency Governance",
+      "actor": "Issuer",
+      "summary": "Allows issuer emergency cancellation strictly while phase is open or revealing (blocked post-award and post-settlement).",
+      "witnessesUsed": [
+        "local_secret_key"
+      ],
+      "ledgerWritten": [
+        "phase"
+      ],
+      "disclosedValues": [
+        "phase = TenderPhase.cancelled"
+      ],
+      "hiddenValues": [
+        "sk"
+      ],
+      "artifacts": {
+        "zkir": {
+          "file": "zkir/cancel_tender.zkir",
+          "bytes": 2981,
+          "sha256": "5626a1b3a826fe641987a83aee0f96d585faa3383c453eaa552dd70c3931a104"
+        },
+        "bzkir": {
+          "file": "zkir/cancel_tender.bzkir",
+          "bytes": 807,
+          "sha256": "7d3d0fa9ac76d4c1fa3683f4481927d5a07038ada6578c05ec9705a3ba4b3ebb"
+        },
+        "prover": {
+          "file": "keys/cancel_tender.prover",
+          "bytes": 11277367,
+          "sha256": "d2257ad641459dc37f1ad048e07451644ebc17e1ff3e8622625c7cd24671392d"
+        },
+        "verifier": {
+          "file": "keys/cancel_tender.verifier",
+          "bytes": 2121,
+          "sha256": "8edf28122cdf92bea746fc90c4fcba7e0921140d234d3b63b5a9dacfa6083119"
+        }
+      },
+      "zkirMetrics": {
+        "zkirVersion": "3.1",
+        "doCommunicationsCommitment": true,
+        "instructionCount": 33,
+        "privateInputs": 2,
+        "publicInputs": 4,
+        "persistentHashes": 1,
+        "assertions": 2,
+        "constrainBits": 2,
+        "lessThans": 0,
+        "impacts": 14,
+        "opCounts": {
+          "public_input": 4,
+          "impact": 14,
+          "test_eq": 4,
+          "cond_select": 3,
+          "assert": 2,
+          "private_input": 2,
+          "constrain_bits": 2,
+          "persistent_hash": 1,
+          "bytes_into_natives": 1
+        },
+        "sampleInstructions": [
+          {
+            "op": "public_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%t.0",
+            "guard": null
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x30"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x51",
+              "0x01",
+              "0x01",
+              "0x00",
+              "0x01",
+              "0x01",
+              "0x00"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "0x01",
+            "inputs": [
+              "0x0c",
+              "0x01",
+              "0x01",
+              "%t.0"
+            ]
+          },
+          {
+            "op": "test_eq",
+            "output": "%t.1",
+            "a": "%t.0",
+            "b": "0x00"
+          },
+          {
+            "op": "cond_select",
+            "output": "%t.2",
+            "bit": "%t.1",
+            "a": "0x00",
+            "b": "0x01"
+          },
+          {
+            "op": "public_input",
+            "type": "Scalar<BLS12-381>",
+            "output": "%t.3",
+            "guard": "%t.2"
+          },
+          {
+            "op": "impact",
+            "guard": "%t.2",
+            "inputs": [
+              "0x30"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "%t.2",
+            "inputs": [
+              "0x51",
+              "0x01",
+              "0x01",
+              "0x00",
+              "0x01",
+              "0x01",
+              "0x00"
+            ]
+          },
+          {
+            "op": "impact",
+            "guard": "%t.2",
+            "inputs": [
+              "0x0c",
+              "0x01",
+              "0x01",
+              "%t.3"
+            ]
+          },
+          {
+            "op": "test_eq",
+            "output": "%t.4",
+            "a": "%t.3",
+            "b": "0x01"
+          },
+          {
+            "op": "cond_select",
+            "output": "%t.5",
+            "bit": "%t.1",
+            "a": "0x01",
+            "b": "%t.4"
+          }
+        ]
+      }
+    }
+  ],
+  "pureHelpers": [
+    {
+      "name": "derive_pk",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "sk",
+          "type": "Bytes<32>"
+        }
+      ],
+      "resultType": "Bytes<32>",
+      "sourceRange": "L71-L73"
+    },
+    {
+      "name": "make_bid_commitment",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "tid",
+          "type": "Bytes<32>"
+        },
+        {
+          "name": "bidder_pk",
+          "type": "Bytes<32>"
+        },
+        {
+          "name": "amount",
+          "type": "Uint<64>"
+        },
+        {
+          "name": "salt",
+          "type": "Bytes<32>"
+        }
+      ],
+      "resultType": "Bytes<32>",
+      "sourceRange": "L75-L89"
+    },
+    {
+      "name": "make_policy_commitment",
+      "pure": true,
+      "proof": false,
+      "arguments": [
+        {
+          "name": "tid",
+          "type": "Bytes<32>"
+        },
+        {
+          "name": "min_band",
+          "type": "Uint<64>"
+        },
+        {
+          "name": "max_band",
+          "type": "Uint<64>"
+        },
+        {
+          "name": "policy_salt",
+          "type": "Bytes<32>"
+        }
+      ],
+      "resultType": "Bytes<32>",
+      "sourceRange": "L91-L104"
+    }
+  ],
+  "witnesses": [
+    {
+      "name": "local_secret_key",
+      "arguments": [],
+      "resultType": "Bytes<32>",
+      "privacy": "LOCAL WITNESS ONLY",
+      "description": "32-byte actor secret key (never disclosed; only derive_pk(sk) leaves witness)"
+    },
+    {
+      "name": "get_bid_amount",
+      "arguments": [],
+      "resultType": "Uint<64>",
+      "privacy": "LOCAL WITNESS ONLY",
+      "description": "Private Uint<64> sealed bid quote (range-proved in ZK, hidden during open phase)"
+    },
+    {
+      "name": "get_bid_salt",
+      "arguments": [],
+      "resultType": "Bytes<32>",
+      "privacy": "LOCAL WITNESS ONLY",
+      "description": "32-byte bidder blinding salt (never disclosed on-chain in any phase)"
+    },
+    {
+      "name": "get_audit_band",
+      "arguments": [],
+      "resultType": "Vector<2, Uint<64>>",
+      "privacy": "LOCAL WITNESS ONLY",
+      "description": "Private [min_band, max_band] compliance corridor (never disclosed on-chain)"
+    },
+    {
+      "name": "get_policy_salt",
+      "arguments": [],
+      "resultType": "Bytes<32>",
+      "privacy": "LOCAL WITNESS ONLY",
+      "description": "32-byte auditor policy blinding salt (never disclosed on-chain)"
+    },
+    {
+      "name": "store_bid_receipt",
+      "arguments": [
+        {
+          "name": "amt",
+          "type": "Uint<64>"
+        },
+        {
+          "name": "salt",
+          "type": "Bytes<32>"
+        }
+      ],
+      "resultType": "[]",
+      "privacy": "LOCAL WITNESS ONLY",
+      "description": "Persists committed (amount, salt) strictly into local device private state"
+    }
+  ],
+  "ledgerFields": [
+    {
+      "name": "phase",
+      "index": [
+        0,
+        0
+      ],
+      "storage": "Cell",
+      "type": "Enum TenderPhase (open | revealing | awarded | settled | cancelled)",
+      "exported": true
+    },
+    {
+      "name": "tender_id",
+      "index": [
+        0,
+        1
+      ],
+      "storage": "Cell",
+      "type": "Bytes<32>",
+      "exported": true
+    },
+    {
+      "name": "issuer_pk",
+      "index": [
+        0,
+        2
+      ],
+      "storage": "Cell",
+      "type": "Bytes<32>",
+      "exported": true
+    },
+    {
+      "name": "reserve_cap",
+      "index": [
+        0,
+        3
+      ],
+      "storage": "Cell",
+      "type": "Uint<64>",
+      "exported": true
+    },
+    {
+      "name": "bid_count",
+      "index": [
+        0,
+        4
+      ],
+      "storage": "Counter",
+      "type": "Counter (Uint<64>)",
+      "exported": true
+    },
+    {
+      "name": "reveal_count",
+      "index": [
+        0,
+        5
+      ],
+      "storage": "Counter",
+      "type": "Counter (Uint<64>)",
+      "exported": true
+    },
+    {
+      "name": "slot0_used",
+      "index": [
+        0,
+        6
+      ],
+      "storage": "Cell",
+      "type": "Boolean",
+      "exported": true
+    },
+    {
+      "name": "slot1_used",
+      "index": [
+        0,
+        7
+      ],
+      "storage": "Cell",
+      "type": "Boolean",
+      "exported": true
+    },
+    {
+      "name": "slot2_used",
+      "index": [
+        0,
+        8
+      ],
+      "storage": "Cell",
+      "type": "Boolean",
+      "exported": true
+    },
+    {
+      "name": "slot0_bidder",
+      "index": [
+        0,
+        9
+      ],
+      "storage": "Cell",
+      "type": "Bytes<32>",
+      "exported": true
+    },
+    {
+      "name": "slot1_bidder",
+      "index": [
+        1,
+        0
+      ],
+      "storage": "Cell",
+      "type": "Bytes<32>",
+      "exported": true
+    },
+    {
+      "name": "slot2_bidder",
+      "index": [
+        1,
+        1
+      ],
+      "storage": "Cell",
+      "type": "Bytes<32>",
+      "exported": true
+    },
+    {
+      "name": "slot0_commit",
+      "index": [
+        1,
+        2
+      ],
+      "storage": "Cell",
+      "type": "Bytes<32>",
+      "exported": true
+    },
+    {
+      "name": "slot1_commit",
+      "index": [
+        1,
+        3
+      ],
+      "storage": "Cell",
+      "type": "Bytes<32>",
+      "exported": true
+    },
+    {
+      "name": "slot2_commit",
+      "index": [
+        1,
+        4
+      ],
+      "storage": "Cell",
+      "type": "Bytes<32>",
+      "exported": true
+    },
+    {
+      "name": "slot0_revealed",
+      "index": [
+        1,
+        5
+      ],
+      "storage": "Cell",
+      "type": "Boolean",
+      "exported": true
+    },
+    {
+      "name": "slot1_revealed",
+      "index": [
+        1,
+        6
+      ],
+      "storage": "Cell",
+      "type": "Boolean",
+      "exported": true
+    },
+    {
+      "name": "slot2_revealed",
+      "index": [
+        1,
+        7
+      ],
+      "storage": "Cell",
+      "type": "Boolean",
+      "exported": true
+    },
+    {
+      "name": "has_winner",
+      "index": [
+        1,
+        8
+      ],
+      "storage": "Cell",
+      "type": "Boolean",
+      "exported": true
+    },
+    {
+      "name": "winner_pk",
+      "index": [
+        1,
+        9
+      ],
+      "storage": "Cell",
+      "type": "Bytes<32>",
+      "exported": true
+    },
+    {
+      "name": "winning_bid",
+      "index": [
+        1,
+        10
+      ],
+      "storage": "Cell",
+      "type": "Uint<64>",
+      "exported": true
+    },
+    {
+      "name": "policy_locked",
+      "index": [
+        1,
+        11
+      ],
+      "storage": "Cell",
+      "type": "Boolean",
+      "exported": true
+    },
+    {
+      "name": "policy_commitment",
+      "index": [
+        1,
+        12
+      ],
+      "storage": "Cell",
+      "type": "Bytes<32>",
+      "exported": true
+    },
+    {
+      "name": "compliance_hash",
+      "index": [
+        1,
+        13
+      ],
+      "storage": "Cell",
+      "type": "Bytes<32>",
+      "exported": true
+    },
+    {
+      "name": "compliance_ok",
+      "index": [
+        1,
+        14
+      ],
+      "storage": "Cell",
+      "type": "Boolean",
+      "exported": true
+    }
+  ]
+}

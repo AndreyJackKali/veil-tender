@@ -1,15 +1,16 @@
 {
   "name": "@veiltender/contract",
-  "version": "1.0.0",
+  "version": "1.4.0",
   "license": "Apache-2.0",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "compact": "compact compile src/veil_tender.compact src/managed/veil_tender",
+    "manifest": "node ../cli/generate-artifact-manifest.mjs",
     "test": "vitest run --pool=forks --maxWorkers=1",
     "typecheck": "tsc --noEmit",
-    "build": "rm -rf dist && tsc && cp -Rf src/managed dist/managed"
+    "build": "rm -rf dist && tsc && cp -Rf src/managed dist/managed && node ../cli/generate-artifact-manifest.mjs"
   },
   "dependencies": {
     "@midnight-ntwrk/compact-runtime": "^0.21.0"

@@ -3,230 +3,357 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>VeilTender — Pitch Deck (Midnight Buildathon Wave 3)</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237c6cff'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='38' fill='%23050814'%3EV%3C/text%3E%3C/svg%3E" />
+<title>VeilTender v1.4.0 — Judge Pitch Deck (Midnight Buildathon Wave 3)</title>
 <style>
   :root {
     --bg: #070913; --panel: #10152a; --border: #25325a;
     --accent: #7c6cff; --accent2: #22d3ee; --ok: #10b981;
+    --warn: #f59e0b; --err: #ef4444;
     --text: #eef2ff; --muted: #93a0c4;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
-    background: var(--bg); color: var(--text); min-height: 100vh;
+    background: radial-gradient(circle at 20% 0%, #161d42 0%, var(--bg) 55%);
+    color: var(--text); min-height: 100vh;
     display: flex; flex-direction: column;
   }
   .topbar {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 24px; border-bottom: 1px solid var(--border); background: #0a0e1d;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    padding: 12px 22px; border-bottom: 1px solid var(--border); background: rgba(10, 14, 29, 0.92);
+    backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 20;
   }
   .topbar a, .topbar button {
     color: var(--text); background: var(--panel); border: 1px solid var(--border);
-    padding: 7px 14px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; cursor: pointer;
+    padding: 7px 13px; border-radius: 8px; text-decoration: none; font-size: 12.5px; font-weight: 600; cursor: pointer;
   }
-  .stage { flex: 1; display: grid; place-items: center; padding: 28px; }
+  .topbar a.cta {
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #050814; border-color: transparent; font-weight: 700;
+  }
+  .topbar a:hover, .topbar button:hover { border-color: var(--accent2); }
+  .progress { height: 3px; background: #141b35; width: 100%; }
+  .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent), var(--ok)); width: 10%; transition: width 0.25s ease; }
+  .stage { flex: 1; display: grid; place-items: center; padding: 24px 18px; }
   .slide {
-    display: none; width: 100%; max-width: 1040px; min-height: 540px;
-    background: radial-gradient(circle at 85% 12%, rgba(124, 108, 255, 0.16), var(--panel) 55%);
-    border: 1px solid var(--border); border-radius: 18px; padding: 48px 54px;
+    display: none; width: 100%; max-width: 1080px; min-height: 560px;
+    background: radial-gradient(circle at 86% 12%, rgba(124, 108, 255, 0.16), var(--panel) 56%);
+    border: 1px solid var(--border); border-radius: 18px; padding: 40px 46px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
   }
+  @media (max-width: 720px) {
+    .slide { padding: 24px 20px; min-height: auto; }
+    h1 { font-size: 28px !important; }
+    h2 { font-size: 22px !important; }
+    .cols, .stat-grid, .grid-4 { grid-template-columns: 1fr !important; }
+  }
   .slide.active { display: flex; flex-direction: column; justify-content: space-between; }
-  .kicker { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent2); font-weight: 700; margin-bottom: 12px; }
-  h1 { font-size: 40px; line-height: 1.15; letter-spacing: -0.025em; margin-bottom: 18px; }
-  h2 { font-size: 30px; line-height: 1.2; margin-bottom: 18px; letter-spacing: -0.02em; }
-  p, li { font-size: 17px; color: #cbd5f5; line-height: 1.6; }
-  ul { padding-left: 22px; display: flex; flex-direction: column; gap: 10px; }
-  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 14px; }
-  .box { background: rgba(7, 9, 19, 0.7); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
-  .box h3 { font-size: 16px; color: var(--accent2); margin-bottom: 8px; }
-  .code { font-family: ui-monospace, monospace; font-size: 13px; background: #060812; border: 1px solid var(--border); border-radius: 10px; padding: 14px; color: #a5b4fc; white-space: pre; overflow-x: auto; }
-  .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); }
-  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 18px; }
-  .stat { background: #090d1b; border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
-  .stat .num { font-size: 28px; font-weight: 800; color: var(--ok); }
+  .kicker { font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent2); font-weight: 700; margin-bottom: 10px; }
+  h1 { font-size: 38px; line-height: 1.15; letter-spacing: -0.025em; margin-bottom: 14px; }
+  h2 { font-size: 28px; line-height: 1.2; margin-bottom: 14px; letter-spacing: -0.02em; }
+  p, li { font-size: 15.5px; color: #cbd5f5; line-height: 1.58; }
+  ul { padding-left: 20px; display: flex; flex-direction: column; gap: 9px; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; color: #a5b4fc; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 12px; }
+  .box { background: rgba(7, 9, 19, 0.74); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .box h3 { font-size: 15px; color: var(--accent2); margin-bottom: 8px; }
+  .code { font-family: ui-monospace, monospace; font-size: 12.5px; background: #060812; border: 1px solid var(--border); border-radius: 10px; padding: 14px; color: #a5b4fc; white-space: pre; overflow-x: auto; line-height: 1.45; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
+  .stat { background: #090d1b; border: 1px solid var(--border); border-radius: 12px; padding: 15px; }
+  .stat .num { font-size: 25px; font-weight: 800; color: var(--ok); }
+  .stat p { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+  table.deck-tbl { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  table.deck-tbl th, table.deck-tbl td { text-align: left; padding: 8px 10px; border-bottom: 1px solid rgba(37, 50, 90, 0.8); }
+  table.deck-tbl th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent2); }
+  .tag-ok { color: #6ee7b7; font-weight: 700; }
+  .tag-warn { color: #fcd34d; font-weight: 700; }
+  .tag-err { color: #fca5a5; font-weight: 700; }
+  .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--muted); flex-wrap: wrap; gap: 10px; }
+  .dots { display: flex; gap: 6px; align-items: center; }
+  .dot-btn { width: 9px; height: 9px; border-radius: 50%; border: none; background: #2c3a66; cursor: pointer; padding: 0; }
+  .dot-btn.active { background: var(--accent2); width: 22px; border-radius: 999px; }
 </style>
 </head>
 <body>
 <div class="topbar">
-  <div><b>VeilTender</b> · Midnight Buildathon Wave 3 Pitch Deck</div>
-  <div style="display:flex;gap:8px;align-items:center;">
+  <div><b>VeilTender v1.4.0</b> · Midnight Buildathon Wave 3 Judge Deck</div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
     <button onclick="prev()">← Prev</button>
-    <span id="counter" style="font-size:13px;color:#93a0c4;min-width:60px;text-align:center;">1 / 8</span>
+    <span id="counter" style="font-size:13px;color:#93a0c4;min-width:62px;text-align:center;">1 / 10</span>
     <button onclick="next()">Next →</button>
+    <a class="cta" href="index.html#tour">▶ 60s Judge Tour</a>
     <a href="index.html">Live dApp</a>
+    <a href="https://github.com/AndreyJackKali/veil-tender" target="_blank" rel="noopener">GitHub</a>
   </div>
 </div>
+<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
 
 <div class="stage">
+  <!-- Slide 1 -->
   <div class="slide active">
     <div>
       <div class="kicker">Midnight Buildathon · Wave 3 · Privacy-First Finance &amp; Procurement</div>
-      <h1>VeilTender: Zero-Knowledge Sealed-Bid RFQs &amp; Selective Compliance Escrow</h1>
-      <p>Eliminating bid front-running, margin leakage, and opaque procurement on Midnight's dual-ledger blockchain.</p>
+      <h1>VeilTender v1.4.0: Zero-Knowledge Sealed-Bid RFQs &amp; Policy-Locked Compliance Escrow</h1>
+      <p>Eliminating bid front-running, vendor margin leakage, and self-attested compliance loopholes using Midnight's dual-ledger Compact architecture.</p>
       <div class="stat-grid">
-        <div class="stat"><div class="num">7 Circuits</div><p style="font-size:13px;">Compiled with official <code>compact 0.36.1</code></p></div>
-        <div class="stat"><div class="num">12 / 12 Pass</div><p style="font-size:13px;">Real <code>@midnight-ntwrk/compact-runtime</code> tests</p></div>
-        <div class="stat"><div class="num">Apache-2.0</div><p style="font-size:13px;">100% open-source &amp; reproducible</p></div>
+        <div class="stat"><div class="num">8 Circuits</div><p>Compiled with <code>compact 0.36.1</code> + 3 pure helpers (625 ZKIR ops)</p></div>
+        <div class="stat"><div class="num">47 / 47 Pass</div><p>37 real <code>compact-runtime 0.21.0</code> + 10 artifact/receipt tests</p></div>
+        <div class="stat"><div class="num">129.05 MiB</div><p>Real <code>.zkir</code> / <code>.bzkir</code> / <code>.prover</code> / <code>.verifier</code> keys verified</p></div>
+        <div class="stat"><div class="num">Apache-2.0</div><p>100% open-source, CI-verified &amp; reproducible</p></div>
       </div>
     </div>
-    <div class="foot"><span>Built by VeridianLabs</span><span>Slide 1 of 8</span></div>
+    <div class="foot"><span>VeridianLabs (AndreyJackKali) · github.com/AndreyJackKali/veil-tender</span><span>Slide 1 of 10</span></div>
   </div>
 
+  <!-- Slide 2 -->
   <div class="slide">
     <div>
       <div class="kicker">The Problem</div>
-      <h2>Why Public Blockchains &amp; Legacy Portals Fail Procurement</h2>
+      <h2>Why Public Chains &amp; Legacy RFQ Portals Break Procurement</h2>
       <div class="cols">
         <div class="box">
-          <h3>Public Chains (Ethereum / Solana)</h3>
+          <h3>Public Blockchains (EVM / Solana)</h3>
           <ul>
-            <li>Bids sit in plaintext in mempools and state.</li>
+            <li>Bids sit in plaintext inside mempools and on-chain storage.</li>
             <li>Competitors snipe &amp; undercut by $1 in the final block.</li>
-            <li>Suppliers expose proprietary pricing structures forever.</li>
+            <li>Suppliers expose proprietary pricing margins permanently.</li>
+            <li>Publishing audit bands lets bidders game the exact ceiling.</li>
           </ul>
         </div>
         <div class="box">
-          <h3>Centralized RFQ Portals</h3>
+          <h3>Centralized RFQ Portals &amp; Naive ZK</h3>
           <ul>
-            <li>Vendors must blindly trust portal operators not to leak bids.</li>
+            <li>Vendors must blindly trust operators not to leak or rig awards.</li>
             <li>No cryptographic proof that the lowest valid bid won.</li>
-            <li>Auditing compliance forces leaking confidential internal thresholds.</li>
+            <li><b>The Self-Attestation Loophole:</b> Without pre-locked policy commitments, a winner could prove compliance against a forged wide range <code>[$1, $100k]</code>!</li>
           </ul>
         </div>
       </div>
     </div>
-    <div class="foot"><span>VeilTender · Midnight Network</span><span>Slide 2 of 8</span></div>
+    <div class="foot"><span>VeilTender · Solving Both Privacy &amp; Verifiable Compliance</span><span>Slide 2 of 10</span></div>
   </div>
 
+  <!-- Slide 3 -->
   <div class="slide">
     <div>
       <div class="kicker">The Midnight Solution</div>
-      <h2>Dual-Ledger Privacy + Selective Disclosure by Construction</h2>
-      <ul>
-        <li><b>Zero-Knowledge Range-Proved Sealed Bids:</b> Bidders prove <code>0 &lt; amount &lt;= reserve_cap</code> locally via private witness; only the salted <code>persistentHash</code> commitment enters the public ledger.</li>
-        <li><b>Anti-Sniping &amp; Anti-Self-Bidding:</b> Compact circuits enforce <code>pk != issuer_pk</code>, reject duplicate bids per derived identity, and lock commitments before the reveal window opens.</li>
-        <li><b>Deterministic Lowest-Bid Award:</b> During reveal, bidders open commitments; tampered amounts or salts fail cryptographic verification immediately.</li>
-        <li><b>Selective Compliance Disclosure:</b> The winner proves <code>winning_bid ∈ [min_band, max_band]</code> using a private auditor policy witness — disclosing only <code>compliance_hash</code> and <code>compliance_ok = true</code>.</li>
-      </ul>
+      <h2>Dual-Ledger Privacy + Pre-Award Policy-Locked Compliance</h2>
+      <table class="deck-tbl">
+        <thead>
+          <tr><th>Data Element</th><th>Midnight Layer</th><th>Public During Bidding?</th><th>Cryptographic Guarantee</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>Bidder Secret Key (<code>sk</code>)</b></td><td>Local Witness</td><td class="tag-ok">NEVER</td><td>Only domain-separated <code>derive_pk(sk)</code> disclosed</td></tr>
+          <tr><td><b>Sealed Bid Amount &amp; Salt</b></td><td>Local Witness</td><td class="tag-ok">NEVER</td><td>ZK range proof <code>0 &lt; amount &lt;= reserve_cap</code> + salted <code>persistentHash</code></td></tr>
+          <tr><td><b>Auditor Band <code>[min, max]</code> + <code>policy_salt</code></b></td><td>Local Witness</td><td class="tag-ok">NEVER</td><td>Issuer locks <code>policy_commitment</code> pre-award; winner proves opening in ZK</td></tr>
+          <tr><td><b>Reserve Cap &amp; Phase State</b></td><td>Public Ledger</td><td>Yes (Public)</td><td>25 exported ledger cells — zero bid quotes or policy bounds stored</td></tr>
+        </tbody>
+      </table>
     </div>
-    <div class="foot"><span>VeilTender · Midnight Network</span><span>Slide 3 of 8</span></div>
+    <div class="foot"><span>6 Private Witnesses · 25 Public Ledger Cells · Compiler-Checked Non-Disclosure</span><span>Slide 3 of 10</span></div>
   </div>
 
+  <!-- Slide 4 -->
   <div class="slide">
     <div>
-      <div class="kicker">Compact Smart Contract Architecture</div>
-      <h2>Compiler-Verified Information-Flow Privacy (<code>veil_tender.compact</code>)</h2>
-      <div class="code">export circuit submit_sealed_bid(): [] {
-  assert(phase == TenderPhase.open, "Tender is not accepting sealed bids");
-  const sk = local_secret_key();           // Private witness — NEVER disclosed
-  const pk = derive_pk(sk);
-  const amount = get_bid_amount();         // Private witness — NEVER disclosed
-  const salt = get_bid_salt();             // Private witness — NEVER disclosed
-  assert(amount &gt; 0 &amp;&amp; amount &lt;= reserve_cap, "ZK range proof");
-  const commitment = make_bid_commitment(tender_id, pk, amount, salt);
-  store_bid_receipt(amount, salt);         // Persisted strictly in local state
-  slot0_bidder = disclose(pk);             // Explicit compiler-checked disclosure
-  slot0_commit = disclose(commitment);
+      <div class="kicker">Compact 0.36.1 Architecture</div>
+      <h2>8 Compiled ZK Circuits + 3 Pure Cryptographic Helpers</h2>
+      <table class="deck-tbl">
+        <thead>
+          <tr><th>Circuit</th><th>Phase &amp; Actor</th><th>BLS12-381 Ops</th><th>Asserts</th><th>ZKIR / Prover Key</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>lock_compliance_policy()</code></td><td>Phase 0 · Issuer</td><td>73</td><td>6</td><td>6.6 KB / 21.51 MiB</td></tr>
+          <tr><td><code>submit_sealed_bid()</code></td><td>Phase 1 · Bidder</td><td>162</td><td>8</td><td>13.9 KB / 21.51 MiB</td></tr>
+          <tr><td><code>close_bidding()</code></td><td>Phase 1→2 · Issuer</td><td>31</td><td>3</td><td>2.7 KB / 10.75 MiB</td></tr>
+          <tr><td><code>reveal_bid()</code></td><td>Phase 2 · Bidder</td><td>176</td><td>10</td><td>15.2 KB / 21.51 MiB</td></tr>
+          <tr><td><code>finalize_award()</code></td><td>Phase 2→3 · Issuer</td><td>31</td><td>3</td><td>2.7 KB / 10.75 MiB</td></tr>
+          <tr><td><code>prove_compliance_band()</code></td><td>Phase 4 · Winner</td><td>88</td><td>6</td><td>8.4 KB / 21.51 MiB</td></tr>
+          <tr><td><code>settle_tender()</code> / <code>cancel_tender()</code></td><td>Phase 5 / Cancel · Issuer</td><td>31 / 33</td><td>3 / 2</td><td>2.7–2.9 KB / 10.75 MiB</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="foot"><span>Pure Helpers: derive_pk, make_bid_commitment, make_policy_commitment</span><span>Slide 4 of 10</span></div>
+  </div>
+
+  <!-- Slide 5 -->
+  <div class="slide">
+    <div>
+      <div class="kicker">Compiler-Enforced Information-Flow Privacy</div>
+      <h2>Zero Witness Leakage by Construction (<code>veil_tender.compact</code>)</h2>
+      <div class="code">export circuit lock_compliance_policy(): [] {
+  assert(phase == TenderPhase.open || phase == TenderPhase.revealing, "Policy must be locked prior to award");
+  assert(!policy_locked, "Compliance policy already locked");
+  assert(derive_pk(local_secret_key()) == issuer_pk, "Only issuer can lock compliance policy");
+  const band = get_audit_band();                 // Private witness — NEVER disclosed
+  const policy_salt = get_policy_salt();         // Private witness — NEVER disclosed
+  assert(band[0] &gt; 0 &amp;&amp; band[0] &lt;= band[1] &amp;&amp; band[1] &lt;= reserve_cap, "Valid policy corridor");
+  policy_commitment = disclose(make_policy_commitment(tender_id, band[0], band[1], policy_salt));
+  policy_locked = true;
 }</div>
+      <p style="margin-top:12px;">In <code>prove_compliance_band()</code>, if <code>policy_locked</code> is true, the winner MUST prove in ZK that their private <code>[min_band, max_band, policy_salt]</code> opens <code>policy_commitment</code> AND contains <code>winning_bid</code> — closing the forged self-attestation attack permanently.</p>
     </div>
-    <div class="foot"><span>Compiled with compact 0.36.1 · 7 .zkir/.bzkir circuits</span><span>Slide 4 of 8</span></div>
+    <div class="foot"><span>pkgs/contract/src/veil_tender.compact (275 lines, Apache-2.0)</span><span>Slide 5 of 10</span></div>
   </div>
 
+  <!-- Slide 6 -->
   <div class="slide">
     <div>
-      <div class="kicker">Quality Assurance &amp; Reliability</div>
-      <h2>100% Real Compact-Runtime Multi-Party Simulator Verification</h2>
+      <div class="kicker">Security Invariants &amp; Adversarial Testing</div>
+      <h2>9 Live Exploit Vectors Rejected Deterministically</h2>
       <div class="cols">
         <div class="box">
-          <h3>Verified Security Invariants</h3>
+          <h3>Core 4 Tour Exploits (Proved in Browser + Vitest)</h3>
           <ul>
-            <li>Constructor rejects zero reserve cap.</li>
-            <li>ZK range proof rejects <code>0</code> and <code>reserve_cap + 1</code> bids.</li>
-            <li>Blocks issuer self-bidding, duplicate bidder identities &amp; slot overflow.</li>
-            <li>Blocks tampered reveal amounts/salts and double-reveal replay.</li>
+            <li><b>Double-Bid:</b> Duplicate bidder identity across slots 0/1/2 rejected (<code>Bidder already submitted</code>).</li>
+            <li><b>Bid Tamper:</b> Undercut reveal or wrong salt rejected (<code>Commitment mismatch</code>).</li>
+            <li><b>Premature Reveal:</b> Calling <code>reveal_bid()</code> during <code>open</code> phase rejected.</li>
+            <li><b>Compliance Bypass:</b> Forged wide range <code>[$1, $100k]</code> rejected by <code>policy_commitment</code>.</li>
           </ul>
         </div>
         <div class="box">
-          <h3>Compliance &amp; Lifecycle Gates</h3>
+          <h3>5 Additional Hardened Invariants</h3>
           <ul>
-            <li>Only issuer can close bidding, finalize award, settle, or cancel pre-award.</li>
-            <li>Settlement reverts unless winner passes <code>prove_compliance_band()</code>.</li>
-            <li>Non-winners &amp; out-of-band policy bounds rejected deterministically.</li>
-            <li><code>tsc --noEmit</code>: 0 errors · Vitest: 12/12 passing in &lt;2s.</li>
+            <li><b>Exceed Reserve Cap / Zero Bid:</b> ZK range proof rejects <code>0</code> and <code>cap + 1</code>.</li>
+            <li><b>Issuer Self-Bid:</b> <code>derive_pk(sk) != issuer_pk</code> enforced inside circuit.</li>
+            <li><b>Settle Unattested:</b> Escrow refuses settlement while <code>compliance_ok == false</code>.</li>
+            <li><b>Wrong Policy Salt / Out-of-Band:</b> Blocked even with valid bounds or valid salt.</li>
+            <li><b>Offline Receipt Tampering:</b> CLI &amp; browser verifiers reject altered bids, hashes, or flags.</li>
           </ul>
         </div>
       </div>
     </div>
-    <div class="foot"><span>pkgs/contract/src/test/veil-tender.test.ts</span><span>Slide 5 of 8</span></div>
+    <div class="foot"><span>47/47 Vitest tests + 15/15 CLI receipt checks passing in GitHub Actions CI</span><span>Slide 6 of 10</span></div>
   </div>
 
+  <!-- Slide 7 -->
   <div class="slide">
     <div>
-      <div class="kicker">User Experience &amp; Live Demo</div>
-      <h2>Interactive Web dApp + Midnight Lace Connector + CLI</h2>
-      <ul>
-        <li><b>Live Browser dApp:</b> Side-by-side view of <i>Public On-Chain Ledger</i> vs. <i>Private Local Witness State</i> so procurement officers and judges immediately see zero bid leakage during the sealed phase.</li>
-        <li><b>Lace Wallet Integration:</b> Detects <code>window.midnight.mnLace</code> (<code>@midnight-ntwrk/dapp-connector-api</code>) with seamless fallback to the deterministic local dual-ledger simulator.</li>
-        <li><b>One-Click 5-Phase Guided Demo &amp; CLI Runner:</b> Reproduces the full 3-bidder procurement lifecycle in seconds via browser or <code>node pkgs/cli/demo.mjs</code>.</li>
-      </ul>
+      <div class="kicker">Radical Transparency for Judges</div>
+      <h2>Real vs. Simulated Matrix (Honest Engineering Breakdown)</h2>
+      <table class="deck-tbl">
+        <thead>
+          <tr><th>Component</th><th>Status</th><th>Verification Evidence</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b><code>veil_tender.compact</code> &amp; 8 Circuits</b></td><td class="tag-ok">100% REAL</td><td>Compiled by <code>compact 0.36.1</code> into real <code>.zkir/.bzkir/.prover/.verifier</code> keys (129.05 MiB)</td></tr>
+          <tr><td><b>47 Automated Tests</b></td><td class="tag-ok">100% REAL</td><td>37 execute compiled JS contract via <code>@midnight-ntwrk/compact-runtime 0.21.0</code> + 10 artifact/receipt tests</td></tr>
+          <tr><td><b>Circuit Inspector &amp; Receipt CLI</b></td><td class="tag-ok">100% REAL</td><td><code>compact-artifacts.json</code> &amp; <code>verify-receipt.mjs</code> hash real compiled artifacts on disk</td></tr>
+          <tr><td><b>GitHub Pages Interactive dApp</b></td><td class="tag-warn">LOCAL SIMULATOR</td><td>Mirrors contract ledger/witness semantics in-browser for zero-faucet judging; Lace button checks connector only</td></tr>
+          <tr><td><b>Live Midnight Testnet Deploy</b></td><td class="tag-err">NOT YET DEPLOYED</td><td>Scheduled next milestone with Proof Server + funded Testnet wallet — never misrepresented</td></tr>
+        </tbody>
+      </table>
     </div>
-    <div class="foot"><span>Live Demo: andreyjackkali.github.io/veil-tender</span><span>Slide 6 of 8</span></div>
+    <div class="foot"><span>Why? Judges get instant 60s UX + 100% real compiled Compact 0.36.1 verification locally</span><span>Slide 7 of 10</span></div>
   </div>
 
+  <!-- Slide 8 -->
+  <div class="slide">
+    <div>
+      <div class="kicker">Benchmarks &amp; Verification Telemetry</div>
+      <h2>Reproducible Verification in &lt; 10 Seconds</h2>
+      <div class="cols">
+        <div class="box">
+          <h3>Real Compiled &amp; Runtime Metrics</h3>
+          <ul>
+            <li><b>Total BLS12-381 ZKIR Instructions:</b> 625 across 8 circuits (<code>do_communications_commitment: true</code> on 8/8).</li>
+            <li><b>Cryptographic Gadgets:</b> 13 <code>persistent_hash</code> calls + 41 circuit assertions.</li>
+            <li><b>Verifier Key Footprint:</b> Constant <code>2,121 B</code> per circuit (16.9 KB total).</li>
+            <li><b>Full 47-Test Vitest Runtime:</b> ~5 seconds end-to-end on Node 22.</li>
+          </ul>
+        </div>
+        <div class="box">
+          <h3>One-Command Judge Verification</h3>
+          <div class="code">cd pkgs/contract
+npm ci
+npm run manifest
+npm run typecheck
+npm test              # 47/47 PASS
+cd ../..
+node pkgs/cli/audit-receipt.mjs &gt; /tmp/r.json
+node pkgs/cli/verify-receipt.mjs /tmp/r.json</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>GitHub Actions CI verifies manifest, typecheck, 47 tests, build, demo &amp; receipt CLI</span><span>Slide 8 of 10</span></div>
+  </div>
+
+  <!-- Slide 9 -->
   <div class="slide">
     <div>
       <div class="kicker">Market &amp; Business Viability</div>
-      <h2>Target Verticals &amp; Adoption Path</h2>
+      <h2>High-Value Privacy Procurement Verticals</h2>
       <div class="cols">
         <div class="box">
-          <h3>Immediate Beachhead Markets</h3>
+          <h3>Target Beachhead Markets</h3>
           <ul>
-            <li><b>DAO Service-Provider RFPs:</b> Security audits, infrastructure grants, and market-maker tenders ($2B+/yr in Web3 treasuries).</li>
-            <li><b>Institutional OTC RFQs:</b> Confidential block-quote execution without leaking desk inventory.</li>
-            <li><b>Enterprise B2B Procurement:</b> Verifiable sealed tenders with selective regulator auditability.</li>
+            <li><b>DAO Service-Provider RFPs:</b> Security audits, RPC infra, and market-making grants ($2B+/yr across Web3 treasuries).</li>
+            <li><b>Institutional OTC Block RFQs:</b> Multi-dealer quote execution without leaking desk inventory or pricing curves.</li>
+            <li><b>Enterprise B2B Procurement:</b> Sealed vendor tenders with selective regulator &amp; internal-audit proof receipts.</li>
           </ul>
         </div>
         <div class="box">
-          <h3>Monetization &amp; GTM</h3>
+          <h3>Sustainable Revenue &amp; Ecosystem Fit</h3>
           <ul>
-            <li>0.15% settlement fee on awarded escrow volume (capped per enterprise RFQ).</li>
-            <li>Open-source Compact core drives developer adoption; hosted compliance-reporting &amp; ERP connectors drive B2B SaaS ARR.</li>
+            <li><b>Open-Source Core (Apache-2.0):</b> Standardizes sealed-bid ZK primitives for the Midnight developer ecosystem.</li>
+            <li><b>Settlement &amp; SaaS Layer:</b> 0.15% escrow settlement fee (capped per RFQ) + hosted ERP / auditor receipt archive SaaS.</li>
           </ul>
         </div>
       </div>
     </div>
-    <div class="foot"><span>VeilTender · Enterprise &amp; DAO Procurement</span><span>Slide 7 of 8</span></div>
+    <div class="foot"><span>Built natively for Midnight's programmable privacy &amp; selective disclosure model</span><span>Slide 9 of 10</span></div>
   </div>
 
+  <!-- Slide 10 -->
   <div class="slide">
     <div>
-      <div class="kicker">Roadmap &amp; Ecosystem Contribution</div>
-      <h2>From Compiled ZK Prototype to Midnight Mainnet</h2>
+      <div class="kicker">Wave 3 Progress &amp; Roadmap</div>
+      <h2>Shipped Today (v1.4.0) → Path to Midnight Mainnet</h2>
       <ul>
-        <li><b>Wave 3 (Delivered Today):</b> Compiled 7-circuit Compact 0.36.1 contract, multi-party <code>compact-runtime 0.21.0</code> simulator, 12 passing Vitest tests, CLI runner, interactive Web dApp with Lace connector, and Apache-2.0 open-source repo.</li>
-        <li><b>Next 30 Days:</b> Shielded Zswap collateral bond locking (anti-griefing deposit forfeited if a committed bidder fails to reveal) + dynamic Merkle-tree bidder allowlists for 100+ concurrent bidders.</li>
-        <li><b>Q1 2027:</b> PreProd testnet deployment with Proof Server integration, multi-criteria weighted scoring circuits, and DAO Safe / Cardano cross-chain settlement adapters.</li>
+        <li><b>Wave 3 Delivered (v1.0 → v1.4.0):</b> Upgraded from 7 to <b>8 compiled Compact 0.36.1 circuits</b> (adding <code>lock_compliance_policy()</code>), expanded tests from 12 to <b>47/47 passing</b>, built the <b>Real Compiled Circuit &amp; Artifact Inspector</b>, <b>60-Second Guided Judge Tour</b>, 9-exploit Adversarial Lab, and 15-check Offline Auditor Receipt CLI.</li>
+        <li><b>Next 30 Days:</b> Midnight PreProd Testnet deployment with local/hosted Proof Server, shielded Zswap reveal-bond collateral (slashing non-revealing bidders), and Merkle-tree allowlists for 100+ concurrent bidders.</li>
+        <li><b>Q1 2027:</b> Multi-criteria weighted scoring circuits (price + SLA + reputation), Cardano / DAO Safe settlement adapters, and enterprise ERP webhooks.</li>
       </ul>
     </div>
-    <div class="foot"><span>Thank You · github.com/AndreyJackKali/veil-tender</span><span>Slide 8 of 8</span></div>
+    <div class="foot"><span>Thank You · Try the 60s Guided Judge Tour at andreyjackkali.github.io/veil-tender/#tour</span><span>Slide 10 of 10</span></div>
   </div>
 </div>
 
 <script>
 const slides = Array.from(document.querySelectorAll(".slide"));
 let idx = 0;
+
+function renderDots() {
+  document.querySelectorAll(".slide .foot").forEach((foot, sIdx) => {
+    let dots = foot.querySelector(".dots");
+    if (!dots) {
+      dots = document.createElement("div");
+      dots.className = "dots";
+      foot.insertBefore(dots, foot.lastElementChild);
+    }
+    dots.innerHTML = slides.map((_, i) =>
+      `<button class="dot-btn${i === idx ? " active" : ""}" aria-label="Slide ${i + 1}" onclick="show(${i})"></button>`
+    ).join("");
+  });
+}
+
 function show(n) {
   idx = (n + slides.length) % slides.length;
   slides.forEach((s, i) => s.classList.toggle("active", i === idx));
   document.getElementById("counter").textContent = `${idx + 1} / ${slides.length}`;
+  document.getElementById("progressBar").style.width = `${((idx + 1) / slides.length) * 100}%`;
+  renderDots();
 }
 function next() { show(idx + 1); }
 function prev() { show(idx - 1); }
+
 document.addEventListener("keydown", e => {
-  if (e.key === "ArrowRight" || e.key === " ") next();
-  if (e.key === "ArrowLeft") prev();
+  if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); next(); }
+  if (e.key === "ArrowLeft") { e.preventDefault(); prev(); }
 });
+
+show(0);
 </script>
 </body>
 </html>

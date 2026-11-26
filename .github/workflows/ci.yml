@@ -19,10 +19,13 @@ jobs:
       - name: Install contract runtime dependencies
         working-directory: pkgs/contract
         run: npm ci
+      - name: Generate Compact 0.36.1 Artifact Manifest
+        working-directory: pkgs/contract
+        run: npm run manifest
       - name: TypeScript typecheck
         working-directory: pkgs/contract
         run: npm run typecheck
-      - name: Run Compact Runtime Vitest Suite (31 tests across 8 ZK circuits)
+      - name: Run Compact Runtime & Artifact Integrity Vitest Suite (47 tests across 8 ZK circuits)
         working-directory: pkgs/contract
         run: npm test
       - name: Build contract package

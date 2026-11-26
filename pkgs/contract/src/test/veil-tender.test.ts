@@ -542,4 +542,134 @@ describe("VeilTender Midnight Compact ZK Contract", () => {
       /Compliance attestation required before settlement/,
     );
   });
+
+  // === v1.4.0 Adversarial Edge-Case, Multi-Slot & Policy-Boundary Tests ===
+
+  it("blocks duplicate bidder submission across slot 1 and slot 2 (Double-Bid invariant)", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    const bob = sim.registerBidder("bob", BOB_SK);
+    const carol = sim.registerBidder("carol", CAROL_SK);
+
+    await sim.submitSealedBid(alice, 89_000n, SALT_A);
+    await sim.submitSealedBid(bob, 76_000n, SALT_B);
+    await expect(sim.submitSealedBid(bob, 65_000n, SALT_C)).rejects.toThrow(
+      /Bidder already submitted/,
+    );
+    await sim.submitSealedBid(carol, 71_000n, SALT_C);
+    await expect(sim.submitSealedBid(carol, 60_000n, SALT_A)).rejects.toThrow(
+      /Bidder already submitted/,
+    );
+    expect(sim.getLedger().bid_count).toBe(3n);
+  });
+
+  it("blocks tampered reveal and double-reveal replay on slots 1 and 2", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    const bob = sim.registerBidder("bob", BOB_SK);
+    const carol = sim.registerBidder("carol", CAROL_SK);
+
+    await sim.submitSealedBid(alice, 91_000n, SALT_A);
+    await sim.submitSealedBid(bob, 73_000n, SALT_B);
+    await sim.submitSealedBid(carol, 68_000n, SALT_C);
+    await sim.closeBidding(sim.issuer);
+
+    await expect(sim.revealBid(bob, 67_000n, SALT_B)).rejects.toThrow(
+      /Commitment mismatch for slot 1/,
+    );
+    await expect(sim.revealBid(carol, 68_000n, SALT_A)).rejects.toThrow(
+      /Commitment mismatch for slot 2/,
+    );
+
+    await sim.revealBid(bob, 73_000n, SALT_B);
+    await expect(sim.revealBid(bob, 73_000n, SALT_B)).rejects.toThrow(
+      /Slot 1 already revealed/,
+    );
+    await sim.revealBid(carol, 68_000n, SALT_C);
+    await expect(sim.revealBid(carol, 68_000n, SALT_C)).rejects.toThrow(
+      /Slot 2 already revealed/,
+    );
+    expect(sim.getLedger().winning_bid).toBe(68_000n);
+    expect(sim.getLedger().winner_pk).toEqual(pureCircuits.derive_pk(CAROL_SK));
+  });
+
+  it("awards cleanly on partial reveal while unrevealed commitments stay sealed", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    const bob = sim.registerBidder("bob", BOB_SK);
+    const carol = sim.registerBidder("carol", CAROL_SK);
+
+    await sim.submitSealedBid(alice, 84_000n, SALT_A);
+    await sim.submitSealedBid(bob, 62_000n, SALT_B);
+    await sim.submitSealedBid(carol, 77_000n, SALT_C);
+    await sim.closeBidding(sim.issuer);
+
+    // Only Carol reveals; Alice and Bob never open their commitments
+    await sim.revealBid(carol);
+    const postReveal = sim.getLedger();
+    expect(postReveal.bid_count).toBe(3n);
+    expect(postReveal.reveal_count).toBe(1n);
+    expect(postReveal.slot0_revealed).toBe(false);
+    expect(postReveal.slot1_revealed).toBe(false);
+    expect(postReveal.slot2_revealed).toBe(true);
+    expect(postReveal.winning_bid).toBe(77_000n);
+    expect(postReveal.winner_pk).toEqual(pureCircuits.derive_pk(CAROL_SK));
+
+    await sim.finalizeAward(sim.issuer);
+    await sim.proveComplianceBand(carol, 70_000n, 80_000n);
+    const settled = await sim.settleTender(sim.issuer);
+    expect(settled.phase).toBe(TenderPhase.settled);
+  });
+
+  it("enforces issuer-only authorization for cancel during reveal and policy lock during reveal", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    await sim.submitSealedBid(alice, 75_000n, SALT_A);
+    await sim.closeBidding(sim.issuer);
+
+    await expect(
+      sim.lockCompliancePolicy(60_000n, 85_000n, POLICY_SALT, alice),
+    ).rejects.toThrow(/Only issuer can lock compliance policy/);
+    await expect(sim.cancelTender(alice)).rejects.toThrow(
+      /Only issuer can cancel tender/,
+    );
+    expect(sim.getLedger().phase).toBe(TenderPhase.revealing);
+    expect(sim.getLedger().policy_locked).toBe(false);
+  });
+
+  it("supports minimum positive bid (1) with locked exact singleton compliance band [1, 1]", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    await sim.lockCompliancePolicy(1n, 1n, POLICY_SALT);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    await sim.submitSealedBid(alice, 1n, SALT_A);
+    await sim.closeBidding(sim.issuer);
+    await sim.revealBid(alice);
+    await sim.finalizeAward(sim.issuer);
+
+    const attested = await sim.proveComplianceBand(alice, 1n, 1n, POLICY_SALT);
+    expect(attested.compliance_ok).toBe(true);
+    const settled = await sim.settleTender(sim.issuer);
+    expect(settled.phase).toBe(TenderPhase.settled);
+    expect(settled.winning_bid).toBe(1n);
+  });
+
+  it("blocks settlement when winning bid exceeds locked policy ceiling even with authentic policy_salt", async () => {
+    const sim = await VeilTenderSimulator.create(TENDER_ID, RESERVE_CAP, ISSUER_SK);
+    await sim.lockCompliancePolicy(50_000n, 70_000n, POLICY_SALT);
+    const alice = sim.registerBidder("alice", ALICE_SK);
+    await sim.submitSealedBid(alice, 82_000n, SALT_A);
+    await sim.closeBidding(sim.issuer);
+    await sim.revealBid(alice);
+    await sim.finalizeAward(sim.issuer);
+
+    await expect(
+      sim.proveComplianceBand(alice, 50_000n, 70_000n, POLICY_SALT),
+    ).rejects.toThrow(/Winning bid above compliance ceiling/);
+    await expect(
+      sim.proveComplianceBand(alice, 50_000n, 90_000n, POLICY_SALT),
+    ).rejects.toThrow(/Compliance band does not match locked policy commitment/);
+    await expect(sim.settleTender(sim.issuer)).rejects.toThrow(
+      /Compliance attestation required before settlement/,
+    );
+  });
 });
