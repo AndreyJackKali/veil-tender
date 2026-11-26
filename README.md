@@ -3,6 +3,7 @@
 > **Privacy-first enterprise RFQs, DAO grants, and OTC block tenders powered by Midnight Compact 0.36.1 zero-knowledge circuits — featuring Pre-Award Policy-Locked Selective Compliance (`lock_compliance_policy`), a Real Compiled Compact 0.36.1 Circuit & Artifact Inspector, a 1-Click 60-Second Guided Judge Tour, and Independent Offline Auditor Receipt Verification.**
 
 - **Live Interactive dApp (Local Dual-Ledger Simulator + Real Compact 0.36.1 Artifact Inspector):** `https://andreyjackkali.github.io/veil-tender/`
+- **1-Page Printable Judge Brief (AKINDO Midnight Wave 3):** `https://andreyjackkali.github.io/veil-tender/judge-brief.html`
 - **1-Click 60-Second Guided Judge Tour:** `https://andreyjackkali.github.io/veil-tender/#tour`
 - **Interactive Judge Pitch Deck (10 Slides):** `https://andreyjackkali.github.io/veil-tender/deck.html`
 - **Narrated Walkthrough Video:** `https://andreyjackkali.github.io/veil-tender/demo.mp4`
@@ -99,6 +100,7 @@ veil-tender/
 │       └── verify-receipt.mjs                   # Independent cryptographic receipt & 8-circuit ZKIR verifier CLI
 └── docs/
     ├── index.html                               # Interactive Web dApp (60s Judge Tour + Compact Inspector + 9-Attack Lab + Verifier)
+    ├── judge-brief.html                         # 1-Page Printable Judge Brief (AKINDO Midnight Wave 3 rubric + demo video)
     ├── compact-artifacts.json                   # Build-time verified Compact 0.36.1 circuit/witness/ledger manifest
     ├── deck.html                                # 10-Slide Interactive Judge Pitch Deck
     └── demo.mp4                                 # 57s Narrated HD Walkthrough Video

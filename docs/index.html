@@ -270,6 +270,7 @@
       <button class="tour-cta" id="navTourBtn" onclick="startJudgeTour()">▶ 60s Judge Tour</button>
       <button id="connectLaceBtn" onclick="connectLace()">Connect Lace</button>
       <a class="btn" href="#inspectorSection">Circuit Inspector</a>
+      <a class="btn" href="judge-brief.html">Judge Brief</a>
       <a class="btn" href="deck.html">Pitch Deck (10 Slides)</a>
       <a class="btn" href="demo.mp4" target="_blank" rel="noopener">Video</a>
       <a class="btn" href="https://github.com/AndreyJackKali/veil-tender" target="_blank" rel="noopener">GitHub</a>
@@ -629,6 +630,17 @@
     <div class="log" id="auditLog"></div>
   </section>
 </main>
+
+<footer style="max-width:1280px;margin:0 auto;padding:0 20px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted);">
+  <span>VeilTender v1.4.0 · Midnight Compact 0.36.1 · Apache License 2.0</span>
+  <span style="display:flex;gap:12px;flex-wrap:wrap;">
+    <a href="judge-brief.html" style="color:var(--accent2);text-decoration:none;font-weight:600;">1-Page Judge Brief</a>
+    <a href="deck.html" style="color:var(--accent2);text-decoration:none;">10-Slide Deck</a>
+    <a href="demo.mp4" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">57s HD Demo</a>
+    <a href="compact-artifacts.json" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">Artifact Manifest</a>
+    <a href="https://github.com/AndreyJackKali/veil-tender" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;">GitHub ↗</a>
+  </span>
+</footer>
 
 <script>
 const PHASES = ["open", "revealing", "awarded", "settled", "cancelled"];
